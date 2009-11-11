@@ -1,0 +1,65 @@
+#include <iostream>
+
+#include <boost/variant.hpp>
+
+using namespace boost;
+using namespace std;
+
+class type_recognition : public boost::static_visitor<int>
+{
+    public:
+        int operator()(const std::string& str) const
+        {
+            cout << "String Type : " << str << endl;
+            return 0;
+        }
+        int operator()(int i) const
+        {
+            cout << "Int Type : " << i << endl;
+            return -1;
+        }
+}; // end - type_recognition
+
+/*
+class value_return : public boost::static_visitor<int>
+{
+    public:
+        const std::string& operator()(const std::string& str) const
+        {
+            return str;
+        }
+        int operator()(int i) const
+        {
+            return i;
+        }
+}; // end - type_recognition
+*/
+
+int main()
+{
+    typedef boost::variant<
+        int,
+        std::string
+    > variant_test_t;
+
+    variant_test_t a,c;
+    a = 3;
+    c = "Hello";
+
+    cout << a.which() << endl;
+    cout << c.which() << endl;
+
+    //if ( boost::apply_visitor(value_return(), a) == 3 )
+        //cout << "Int Matched" << endl;
+
+    //if (!strcmp(c,"Hello") )
+        //cout << "String Matched" << endl;
+
+    cout << a << "," << c << endl;
+
+    int a_ret = boost::apply_visitor( type_recognition(), a );
+    cout << "Return : " << a_ret << endl;
+    int b_ret = boost::apply_visitor( type_recognition(), c );
+    cout << "Return : " << b_ret << endl;
+
+}

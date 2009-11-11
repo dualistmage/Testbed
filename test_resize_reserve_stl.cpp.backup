@@ -1,0 +1,42 @@
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+class Test
+{
+    public:
+        int val_;
+        static int t;
+        Test() : val_(0) {
+            cout << Test::t++ << "th class is created " << this << endl;
+        }
+        Test(const Test& obj)
+        {
+            cout << Test::t++ << "th class is copied from " << &obj << " to << " << this << endl;
+            this->val_ = obj.val_;
+        }
+        ~Test()
+        {
+            cout << "Destructor : " << this << endl;
+        }
+}; // end - class Test
+
+int Test::t;
+
+int main()
+{
+    std::vector<Test> t, t2;
+
+    cout << "Resize Test ----------------" << endl;
+    t.resize(3);
+    Test obj;
+    t.push_back( obj );
+    cout << "Size : " << t.size() << " Capacity : " << t.capacity() << endl << endl;
+
+    cout << "Reserve Test ----------------" << endl;
+    t2.reserve(3);
+    t2.push_back( obj );
+    cout << "Size : " << t2.size() << " Capacity : " << t2.capacity() << endl << endl;
+
+}

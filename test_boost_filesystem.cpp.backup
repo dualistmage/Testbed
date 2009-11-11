@@ -1,0 +1,29 @@
+#include <iostream>
+#include <boost/filesystem/operations.hpp> // This header file needs boost_filesystem-gcc41-mt
+
+using std::cout;
+using std::endl;
+
+using namespace boost::filesystem;
+
+int main()
+{
+
+    for(directory_iterator iter("./"); iter != directory_iterator(); ++iter)
+    {
+        if ( is_directory( iter->path().filename() ) )
+            cout << "Current DIR  : " << iter->path().filename() << endl;
+        else 
+            cout << "Current file : " << iter->path().filename() << endl;
+    }
+
+    if ( is_directory( "/home/wisenut/dualistmage/git/sf1-revolution/bin/scdfiles/100K_E/index-data/" ) )
+        cout << "abc already exists." << endl;
+    else
+    {
+        cout << " abc directory doesn't exist. Generate it" << endl;
+        //create_directory( "abc" );
+    }
+    
+
+}

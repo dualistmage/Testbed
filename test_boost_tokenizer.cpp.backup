@@ -1,0 +1,20 @@
+#include <iostream>
+
+#include <boost/tokenizer.hpp>
+
+using std::cout;
+using std::endl;
+
+using namespace boost;
+
+int main()
+{
+    std::string sourceString("111,222,333,444.555'666");
+    tokenizer<> stringTokenizer( sourceString );
+    tokenizer<>::iterator iter;
+    for(iter = stringTokenizer.begin(); iter != stringTokenizer.end(); iter++)
+    {
+        cout << "Token : " << *iter << endl;
+    }
+
+}

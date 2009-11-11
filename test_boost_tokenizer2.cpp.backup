@@ -1,0 +1,59 @@
+#include <iostream>
+
+#include <boost/tokenizer.hpp>
+
+using std::cout;
+using std::endl;
+
+using namespace boost;
+
+int main()
+{
+    //std::string sourceString("111,222,333,444.555'666");
+    std::string sourceString("\"*!111,[222,333],44 4.{555}'666\"");
+    tokenizer<> stringTokenizer( sourceString );
+    tokenizer<>::iterator iter;
+    std::vector<std::string> originalQueryList;
+    std::vector<std::string> refinedQueryList;
+
+
+    // Tokenizing and apply query correction.
+    for(iter = stringTokenizer.begin(); iter != stringTokenizer.end(); iter++)
+    {
+        cout << "Token : " << *iter << endl;
+
+        originalQueryList.push_back( *iter );
+        if ( *iter == "44" )
+            refinedQueryList.push_back("refined");
+        else if ( *iter ==  "555" )
+            refinedQueryList.push_back("Great World");
+        else
+            refinedQueryList.push_back(*iter );
+    }
+
+    // Replace original Term to the refined query.
+    std::string refinedQuery;
+    size_t prev_pos,pos;
+
+    prev_pos = pos = 0;
+    for(size_t i = 0; i < originalQueryList.size(); i++)
+    {
+        pos = sourceString.find( originalQueryList[i], prev_pos );
+        if ( pos == std::string::npos )
+        {
+            cout << "Tokenizing Failed in query correction module" << endl;
+            return -1;
+        }
+        
+        refinedQuery.append(sourceString, prev_pos, pos - prev_pos );
+        refinedQuery.append(refinedQueryList[i]);
+        prev_pos = pos + originalQueryList[i].length();
+    }
+
+    size_t sourceStringLen = sourceString.length();
+    refinedQuery.append( sourceString, prev_pos, sourceStringLen - prev_pos );
+
+    cout << "Source String  : " << sourceString << endl;
+    cout << "Refined String : " << refinedQuery<< endl;
+
+}

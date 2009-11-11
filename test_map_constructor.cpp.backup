@@ -1,0 +1,52 @@
+#include <iostream>
+#include <map>
+
+using std::cout;
+using std::endl;
+
+class MapTest
+{
+    public:
+        MapTest(unsigned int num=100)
+        {
+            num_ = num;
+        }
+        MapTest(const MapTest & obj )
+        {
+            std::cerr << "HEY : (" << &obj << " -> " << this << ")" << endl;
+            num_ = obj.num_;
+        }
+        unsigned int num_;
+        void print()
+        {
+            std::cerr << "Me : "<< this << endl;
+        }
+};
+
+int main()
+{
+    std::map< std::string , MapTest > test;
+
+    test["test"];
+    std::cerr << "-----------------------" << endl;
+    test["test"].print();
+    std::cerr << "-----------------------" << endl;
+    test["test2"];
+    std::cerr << "-----------------------" << endl;
+    test["test2"].print();
+    std::cerr << "-----------------------" << endl;
+    test["test3"];
+    std::cerr << "-----------------------" << endl;
+    test["test3"].print();
+    std::cerr << "-----------------------" << endl;
+    test["test4"];
+    std::cerr << "-----------------------" << endl;
+    test["test4"].print();
+    std::cerr << "-----------------------" << endl;
+    test["test5"];
+    std::cerr << "-----------------------" << endl;
+    test["test5"].print();
+
+    //cout << "Num : " << test["test"].num_ << endl;
+
+} // end - main()
