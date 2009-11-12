@@ -1,0 +1,4 @@
+<SF1Query>
+    <Collection name="hello" alias="bank">
+    </Collection>
+</SF1Query>
