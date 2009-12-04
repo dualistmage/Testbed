@@ -1,0 +1,131 @@
+#include <iostream>
+#include <stack>
+#include <boost/unordered_map.hpp>
+
+using namespace std;
+
+bool isOperator(char);
+
+bool checkGrammer(const std::string& queryString);
+
+int main()
+{
+    while(1)
+    {
+        char query[256];
+        cout << "Check query Grammer : ";
+        cin.getline(query, 256);
+        cout << "Inputed Query (" << query << ") - ";
+        if ( checkGrammer(query) )
+            cout << "Correct query........" << endl;
+        else
+            cout << "Wrong query........" << endl;
+    }
+}
+
+bool isOperator(char ch)
+{
+    switch( ch )
+    {
+        case ' ':
+        case '|':
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+        case '(':
+        case ')':
+        case '"':
+            return true;
+        default:
+            return false;
+    } // end - switch()
+}
+
+bool isOpenedBracketOperator(char ch)
+{
+    switch( ch )
+    {
+        case '[':
+        case '{':
+        case '(':
+            return true;
+        default:
+            return false;
+    } // end - switch()
+}
+
+bool isClosedBracketOperator(char ch)
+{
+    switch( ch )
+    {
+        case ']':
+        case '}':
+        case ')':
+            return true;
+        default:
+            return false;
+    } // end - switch()
+}
+
+char getPairOpenedBracket(char ch)
+{
+    switch( ch )
+    {
+        case ']':
+            return '[';
+        case '}':
+            return '{';
+        case ')':
+            return '(';
+        default:
+            return 0;
+    } // end - switch()
+}
+
+bool checkGrammer(const std::string& queryString)
+{
+    std::stack<char> grammerCheckStack;
+    std::string::const_iterator iter = queryString.begin();
+    while( iter != queryString.end() )
+    {
+        if ( isOperator(*iter) )
+        {
+            if ( isOpenedBracketOperator(*iter) )
+            {
+                grammerCheckStack.push( *iter );
+                iter++;
+                continue;
+            }
+            else if ( isClosedBracketOperator(*iter) )
+            {
+                if ( grammerCheckStack.empty() )
+                        return false;
+                if ( grammerCheckStack.top() == getPairOpenedBracket(*iter) )
+                {
+                    grammerCheckStack.pop();
+                    iter++;
+                    continue;
+                }
+                else
+                    return false;
+            }
+            else if ( *iter == '"' )
+            {
+                do // skip grammer checking between " ~ "
+                {
+                    iter++;
+                    if ( iter == queryString.end() )
+                        return false;
+                } while( *iter != '"' );
+            }
+        }
+        iter++;
+    } // end - while( iter != queryString.end() )
+
+    if ( grammerCheckStack.empty() )
+        return true;
+    else
+        return false;
+
+} // end - checkGrammer()
