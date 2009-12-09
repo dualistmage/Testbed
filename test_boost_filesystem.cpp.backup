@@ -8,7 +8,7 @@ using namespace boost::filesystem;
 
 int main()
 {
-
+    // Check if the current one is file or directory.
     for(directory_iterator iter("./"); iter != directory_iterator(); ++iter)
     {
         if ( is_directory( iter->path().filename() ) )
@@ -17,6 +17,7 @@ int main()
             cout << "Current file : " << iter->path().filename() << endl;
     }
 
+    /*************************** Directory generation
     if ( is_directory( "/home/wisenut/dualistmage/git/sf1-revolution/bin/scdfiles/100K_E/index-data/" ) )
         cout << "abc already exists." << endl;
     else
@@ -24,6 +25,14 @@ int main()
         cout << " abc directory doesn't exist. Generate it" << endl;
         //create_directory( "abc" );
     }
-    
+    ****************************/
+
+    // automatically adding '/' while adding path.
+    boost::filesystem::path path1("local/include");
+    boost::filesystem::path path2 = operator/("/user",path1);
+    boost::filesystem::path path3 = operator/("/user/",path1);
+
+    std::cout << "Path without / : " << path2 << endl;
+    std::cout << "Path with    / : " << path3 << endl;
 
 }
