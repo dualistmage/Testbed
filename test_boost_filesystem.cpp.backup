@@ -9,51 +9,59 @@ using namespace boost::filesystem;
 int main()
 {
     try {
-    { // Check if the current one is file or directory.
-        for(directory_iterator iter("./"); iter != directory_iterator(); ++iter)
-        {
-            if ( is_directory( iter->path().filename() ) )
-                cout << "Current DIR  : " << iter->path().filename() << endl;
-            else 
-                cout << "Current file : " << iter->path().filename() << endl;
+        { // Check if the current one is file or directory.
+            for(directory_iterator iter("./"); iter != directory_iterator(); ++iter)
+            {
+                if ( is_directory( iter->path().filename() ) )
+                    cout << "Current DIR  : " << iter->path().filename() << endl;
+                else 
+                    cout << "Current file : " << iter->path().filename() << endl;
+            }
         }
-    }
 
-    /*************************** Directory generation
-    if ( is_directory( "/home/wisenut/dualistmage/git/sf1-revolution/bin/scdfiles/100K_E/index-data/" ) )
-        cout << "abc already exists." << endl;
-    else
-    {
-        cout << " abc directory doesn't exist. Generate it" << endl;
+        /*************************** Directory generation
+          if ( is_directory( "/home/wisenut/dualistmage/git/sf1-revolution/bin/scdfiles/100K_E/index-data/" ) )
+          cout << "abc already exists." << endl;
+          else
+          {
+          cout << " abc directory doesn't exist. Generate it" << endl;
         //create_directory( "abc" );
-    }
-    ****************************/
-
-    { // automatically adding '/' while adding path.
-        boost::filesystem::path path1("local/include");
-        boost::filesystem::path path2 = operator/("/user",path1);
-        boost::filesystem::path path3 = operator/("/user/",path1);
-
-        std::cout << "Path without / : " << path2 << endl;
-        std::cout << "Path with    / : " << path3 << endl;
-    }
-
-
-    { // Recursive directory removing and generation.
-        std::string recursiveDirPath("./recur_dir_test/test1/depth2");
-        if ( is_directory("./recur_dir_test/") )
-        {
-            std::cout << "Removing directory : ./recur_dir_test/" << endl;
-            std::cout << "Removing count : " << remove_all( "./recur_dir_test" ) << endl;
-            sleep(3);
         }
-        std::cout << "Generate directory : " << recursiveDirPath << endl;
-        if ( boost::filesystem::create_directories( recursiveDirPath ) )
-            std::cout << "Generation Success" << endl;
-    }
+         ****************************/
 
-    } catch ( boost::filesystem::filesystem_error e )
-    {
-        std::cerr << "Exception occurs" << std::endl;
+        { // automatically adding '/' while adding path.
+            boost::filesystem::path path1("local/include");
+            boost::filesystem::path path2 = operator/("/user",path1);
+            boost::filesystem::path path3 = operator/("/user/",path1);
+
+            std::cout << "Path without / : " << path2 << endl;
+            std::cout << "Path with    / : " << path3 << endl;
+        }
+
+
+        { // Recursive directory removing and generation.
+            std::string recursiveDirPath("./recur_dir_test/test1/depth2");
+            if ( is_directory("./recur_dir_test/") )
+            {
+                std::cout << "Removing directory : ./recur_dir_test/" << endl;
+                std::cout << "Removing count : " << remove_all( "./recur_dir_test" ) << endl;
+                sleep(3);
+            }
+            std::cout << "Generate directory : " << recursiveDirPath << endl;
+            if ( boost::filesystem::create_directories( recursiveDirPath ) )
+                std::cout << "Generation Success" << endl;
+        }
+
+        { // make an exception and see what happens.
+            std::string testDir("./testException");
+            if ( !is_directory( testDir ) )
+                create_directory( testDir );
+            cout << "creation status : " << create_directory( testDir ) << endl;
+        }
+
+    } catch ( boost::filesystem::filesystem_error e ) {
+        std::cerr << "Exception message : " << e.what() << std::endl;
+        std::cerr << "Path1 : " << e.path1() << std::endl;
+        std::cerr << "Path2 : " << e.path2() << std::endl;
     }
 }
