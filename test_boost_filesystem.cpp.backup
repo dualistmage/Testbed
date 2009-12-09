@@ -1,5 +1,5 @@
 #include <iostream>
-#include <boost/filesystem/operations.hpp> // This header file needs boost_filesystem-gcc41-mt
+#include <boost/filesystem.hpp> // This header file needs boost_filesystem-gcc41-mt
 
 using std::cout;
 using std::endl;
@@ -8,13 +8,15 @@ using namespace boost::filesystem;
 
 int main()
 {
-    // Check if the current one is file or directory.
-    for(directory_iterator iter("./"); iter != directory_iterator(); ++iter)
-    {
-        if ( is_directory( iter->path().filename() ) )
-            cout << "Current DIR  : " << iter->path().filename() << endl;
-        else 
-            cout << "Current file : " << iter->path().filename() << endl;
+    try {
+    { // Check if the current one is file or directory.
+        for(directory_iterator iter("./"); iter != directory_iterator(); ++iter)
+        {
+            if ( is_directory( iter->path().filename() ) )
+                cout << "Current DIR  : " << iter->path().filename() << endl;
+            else 
+                cout << "Current file : " << iter->path().filename() << endl;
+        }
     }
 
     /*************************** Directory generation
@@ -27,12 +29,31 @@ int main()
     }
     ****************************/
 
-    // automatically adding '/' while adding path.
-    boost::filesystem::path path1("local/include");
-    boost::filesystem::path path2 = operator/("/user",path1);
-    boost::filesystem::path path3 = operator/("/user/",path1);
+    { // automatically adding '/' while adding path.
+        boost::filesystem::path path1("local/include");
+        boost::filesystem::path path2 = operator/("/user",path1);
+        boost::filesystem::path path3 = operator/("/user/",path1);
 
-    std::cout << "Path without / : " << path2 << endl;
-    std::cout << "Path with    / : " << path3 << endl;
+        std::cout << "Path without / : " << path2 << endl;
+        std::cout << "Path with    / : " << path3 << endl;
+    }
 
+
+    { // Recursive directory removing and generation.
+        std::string recursiveDirPath("./recur_dir_test/test1/depth2");
+        if ( is_directory("./recur_dir_test/") )
+        {
+            std::cout << "Removing directory : ./recur_dir_test/" << endl;
+            std::cout << "Removing count : " << remove_all( "./recur_dir_test" ) << endl;
+            sleep(3);
+        }
+        std::cout << "Generate directory : " << recursiveDirPath << endl;
+        if ( boost::filesystem::create_directories( recursiveDirPath ) )
+            std::cout << "Generation Success" << endl;
+    }
+
+    } catch ( boost::filesystem::filesystem_error e )
+    {
+        std::cerr << "Exception occurs" << std::endl;
+    }
 }
