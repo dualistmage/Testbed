@@ -49,4 +49,22 @@ int main()
         cout << "Year : " << year << " Month : " << month << " Day : " << day << " Week No : " << week
             << " Hour : " << hour << " Minutes : " << minutes << " Seconds : " << seconds << endl;
     } 
+
+    { // Time Duration test
+        cout << endl << "--------------------[ Boost Date_time Test #3" << endl;
+
+        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+        boost::posix_time::ptime futureTime = now 
+            //+ boost::gregorian::months(1)  // This line makes exception while displaying : hour strig length should be equal or less than 2.
+            + boost::gregorian::days(4) // if use 5 instead of 4, it also make exception because hour string will be 3.
+            + boost::posix_time::hours(1)
+            + boost::posix_time::minutes(1)
+            + boost::posix_time::seconds(1);
+
+        boost::posix_time::time_duration plusDuration = futureTime - now;
+        boost::posix_time::time_duration minusDuration = futureTime - now;
+
+        cout << "Plus  Duration : " << plusDuration << endl;
+        cout << "Minus Duration : " << minusDuration << endl;
+    }
 }
