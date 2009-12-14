@@ -1,19 +1,52 @@
 #include <iostream>
-#include <boost/date_time/local_time/local_time.hpp>
+#include <boost/date_time.hpp>
 #include <sstream>
 
 using namespace std;
 
-void LocalTime()
-{
-    boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-    stringstream ss; ss << now;
-    cout << ss.str() << endl;
-
-}
 int main()
 {
+    { // Get Current Time
+        cout << endl << "--------------------[ Boost Date_time Test #1" << endl;
+        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+        cout << "Format 1 - Normal str : " << now << endl;
+        cout << "Format 2 - iso string : " << boost::posix_time::to_iso_string(now) << endl;
+    }
 
-    LocalTime();
+    { // modify the ptime value.
+        cout << endl << "--------------------[ Boost Date_time Test #2" << endl;
 
+        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+        boost::posix_time::ptime futureTime = now 
+            + boost::gregorian::years(1)
+            + boost::gregorian::months(1)
+            + boost::gregorian::days(1)
+            + boost::posix_time::hours(1)
+            + boost::posix_time::minutes(1)
+            + boost::posix_time::seconds(1);
+
+        cout << "Current  Time : " << now << endl;
+        cout << "Modified Time : " << futureTime << endl;
+    }
+
+    { // Extracts year, month, week, day, hour, minute, second information from ptime.
+        cout << endl << "--------------------[ Boost Date_time Test #3" << endl;
+
+        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+        
+        boost::gregorian::date nowDate = now.date();
+        int year  = nowDate.year();
+        int month = nowDate.month();
+        int day   = nowDate.day();
+        int week  = nowDate.week_number();
+
+        boost::posix_time::time_duration nowDuration = now.time_of_day();
+        long hour    = nowDuration.hours();
+        long minutes = nowDuration.minutes();
+        long seconds = nowDuration.seconds();
+
+        cout << "PTime value : " << now << endl;
+        cout << "Year : " << year << " Month : " << month << " Day : " << day << " Week No : " << week
+            << " Hour : " << hour << " Minutes : " << minutes << " Seconds : " << seconds << endl;
+    } 
 }
