@@ -1,18 +1,35 @@
-#include <iostream>
 #include <boost/filesystem.hpp> // This header file needs boost_filesystem-gcc41-mt
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
-using std::cout;
-using std::endl;
+using namespace std;
 
-using namespace boost::filesystem;
+namespace bfs = boost::filesystem;
+
+/*
+bool does_exist(const bfs::path& path)
+{
+    bool existFlag = true;
+    try {
+        existFlag = boost::filesystem::exists(path);
+    } catch ( bfs::filesystem_error e ) {
+        existFlag = false;
+    }
+
+    return existFlag;
+}*/
+
 
 int main()
 {
     try {
         { // Check if the current one is file or directory.
-            for(directory_iterator iter("./"); iter != directory_iterator(); ++iter)
+
+            cout << endl << "----------------------[ Boost Filesystem Test #1" << endl;
+            for(bfs::directory_iterator iter("./"); iter != bfs::directory_iterator(); ++iter)
             {
-                if ( is_directory( iter->path().filename() ) )
+                if ( bfs::is_directory( iter->path().filename() ) )
                     cout << "Current DIR  : " << iter->path().filename() << endl;
                 else 
                     cout << "Current file : " << iter->path().filename() << endl;
@@ -30,38 +47,98 @@ int main()
          ****************************/
 
         { // automatically adding '/' while adding path.
-            boost::filesystem::path path1("local/include");
-            boost::filesystem::path path2 = operator/("/user",path1);
-            boost::filesystem::path path3 = operator/("/user/",path1);
-
+            cout << endl << "----------------------[ Boost Filesystem Test #2" << endl;
+            bfs::path path1("local/include");
+            bfs::path path2 = operator/("/user",path1);
+            bfs::path path3 = operator/("/user/",path1);
             std::cout << "Path without / : " << path2 << endl;
             std::cout << "Path with    / : " << path3 << endl;
+
+            bfs::path path4 = "/user"; path4 = operator/(path4,path1);
+            bfs::path path5 = "/user/"; path5 = operator/(path5,path1);
+            std::cout << "Path without / : " << path4 << endl;
+            std::cout << "Path with    / : " << path5 << endl;
         }
 
 
         { // Recursive directory removing and generation.
+            cout << endl << "----------------------[ Boost Filesystem Test #3" << endl;
             std::string recursiveDirPath("./recur_dir_test/test1/depth2");
-            if ( is_directory("./recur_dir_test/") )
+            std::cout << "Generate directory : " << recursiveDirPath << endl;
+            if ( bfs::create_directories( recursiveDirPath ) )
+                std::cout << "Generation Success" << endl;
+            if ( bfs::is_directory("./recur_dir_test/") )
             {
                 std::cout << "Removing directory : ./recur_dir_test/" << endl;
-                std::cout << "Removing count : " << remove_all( "./recur_dir_test" ) << endl;
-                sleep(3);
+                std::cout << "Removing count : " << bfs::remove_all( "./recur_dir_test" ) << endl;
             }
-            std::cout << "Generate directory : " << recursiveDirPath << endl;
-            if ( boost::filesystem::create_directories( recursiveDirPath ) )
-                std::cout << "Generation Success" << endl;
         }
 
-        { // make an exception and see what happens.
-            std::string testDir("./testException");
-            if ( !is_directory( testDir ) )
-                create_directory( testDir );
-            cout << "creation status : " << create_directory( testDir ) << endl;
+        // { // make an exception and see what happens.
+        //     cout << endl << "----------------------[ Boost Filesystem Test #4" << endl;
+        //     std::string testDir("./testException");
+        //     if ( !is_directory( testDir ) )
+        //         create_directory( testDir );
+        //     cout << "creation status : " << create_directory( testDir ) << endl;
+        // }
+
+        { // Find the last file which have same prefix using file_size function.
+            cout << endl << "----------------------[ Boost Filesystem Test #5" << endl;
+
+            // Generate 2009_1.log ~ 2009_20.log files
+            ofstream fpout;
+            for(size_t i = 1; i < 21; i++)
+            {
+                stringstream ss;
+                ss << "2009_" << i << ".log";
+                fpout.open( ss.str().c_str() );
+                fpout << i << endl;
+                fpout.close();
+            }
+
+            size_t sequenceMax = 1;
+            bfs::path lastFilePath;
+
+            while(1)
+            {
+                stringstream ss;
+                ss << "2009_" << sequenceMax << ".log";
+                bfs::path curPath( ss.str() );
+                cout << "Check if it is exists : " << curPath;
+                if ( !bfs::exists( curPath ) )
+                {
+                    cout << " : Not found" << endl;
+                    sequenceMax--;
+                    break;
+                }
+                cout << " : found" << endl;
+                sequenceMax++;
+                lastFilePath = ss.str();
+            }
+
+            uintmax_t fileSize = bfs::file_size( lastFilePath );
+            cout << lastFilePath << " : Sequence No(" << sequenceMax << ") File size(" << fileSize << ")" << endl;
+
+
+            // Remove generated file
+            for(size_t i = 1; i < 21; i++)
+            {
+                stringstream ss;
+                ss << "2009_" << i << ".log";
+                bfs::remove( ss.str() );
+            }
+
         }
 
-    } catch ( boost::filesystem::filesystem_error e ) {
+
+
+
+
+    } catch ( bfs::filesystem_error e ) {
         std::cerr << "Exception message : " << e.what() << std::endl;
         std::cerr << "Path1 : " << e.path1() << std::endl;
         std::cerr << "Path2 : " << e.path2() << std::endl;
     }
+
 }
+
