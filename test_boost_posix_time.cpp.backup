@@ -6,17 +6,17 @@ using namespace std;
 
 int main()
 {
+    boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+
     { // Get Current Time
-        cout << endl << "--------------------[ Boost Date_time Test #1" << endl;
-        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+        cout << endl << "--------------------[ Boost Date_time Test #1 : Display ptime" << endl;
         cout << "Format 1 - Normal str : " << now << endl;
         cout << "Format 2 - iso string : " << boost::posix_time::to_iso_string(now) << endl;
     }
 
     { // modify the ptime value.
-        cout << endl << "--------------------[ Boost Date_time Test #2" << endl;
+        cout << endl << "--------------------[ Boost Date_time Test #2 : Modify ptime" << endl;
 
-        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
         boost::posix_time::ptime futureTime = now 
             + boost::gregorian::years(1)
             + boost::gregorian::months(1)
@@ -30,10 +30,8 @@ int main()
     }
 
     { // Extracts year, month, week, day, hour, minute, second information from ptime.
-        cout << endl << "--------------------[ Boost Date_time Test #3" << endl;
+        cout << endl << "--------------------[ Boost Date_time Test #3 : Extract date & time info from ptime" << endl;
 
-        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-        
         boost::gregorian::date nowDate = now.date();
         int year  = nowDate.year();
         int month = nowDate.month();
@@ -51,9 +49,8 @@ int main()
     } 
 
     { // Time Duration test
-        cout << endl << "--------------------[ Boost Date_time Test #3" << endl;
+        cout << endl << "--------------------[ Boost Date_time Test #4 : Time duration" << endl;
 
-        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
         boost::posix_time::ptime futureTime = now 
             //+ boost::gregorian::months(1)  // This line makes exception while displaying : hour strig length should be equal or less than 2.
             + boost::gregorian::days(4) // if use 5 instead of 4, it also make exception because hour string will be 3.
@@ -61,10 +58,28 @@ int main()
             + boost::posix_time::minutes(1)
             + boost::posix_time::seconds(1);
 
-        boost::posix_time::time_duration plusDuration = futureTime - now;
-        boost::posix_time::time_duration minusDuration = futureTime - now;
+        boost::posix_time::time_duration plusDuration  = futureTime - now;
+        boost::posix_time::time_duration minusDuration = now - futureTime;
 
-        cout << "Plus  Duration : " << plusDuration << endl;
+        cout << "Plus  Duration : " << plusDuration  << endl;
         cout << "Minus Duration : " << minusDuration << endl;
+    }
+
+    { // Date Duration test
+        cout << endl << "--------------------[ Boost Date_time Test #5 : Date duration" << endl;
+
+        boost::posix_time::ptime futureTime = now 
+            + boost::gregorian::years(1)
+            + boost::gregorian::months(1)
+            + boost::gregorian::days(1)
+            + boost::posix_time::hours(1)
+            + boost::posix_time::minutes(1)
+            + boost::posix_time::seconds(1);
+
+        boost::gregorian::date_duration plusDateDuration  = futureTime.date() - now.date();
+        boost::gregorian::date_duration minusDateDuration = now.date() - futureTime.date();
+
+        cout << "Plus  date duration : " << plusDateDuration  << endl;
+        cout << "Minus date duration : " << minusDateDuration << endl;
     }
 }
