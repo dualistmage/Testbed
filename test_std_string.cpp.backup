@@ -1,0 +1,15 @@
+#include <iostream>
+
+using namespace std;
+
+int main()
+{
+    { // operator[] and at() boundary test 
+        string a("abc");
+        cout << "Length   : " << a.length() << endl;
+        cout << "a[10]    : (" << a[10] << ")" << endl;
+        cout << "Length   : " << a.length() << endl;
+        cout << "a.at(15) : (" << a.at(15) << ")" << endl;
+        cout << "Length   : " << a.length() << endl;
+    }
+}
