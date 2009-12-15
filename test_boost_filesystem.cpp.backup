@@ -23,10 +23,11 @@ bool does_exist(const bfs::path& path)
 
 int main()
 {
+    int testNo = 1;
     try {
         { // Check if the current one is file or directory.
 
-            cout << endl << "----------------------[ Boost Filesystem Test #1" << endl;
+            cout << endl << "----------------------[ Boost Filesystem Test #" << testNo++ << endl;
             for(bfs::directory_iterator iter("./"); iter != bfs::directory_iterator(); ++iter)
             {
                 if ( bfs::is_directory( iter->path().filename() ) )
@@ -47,7 +48,7 @@ int main()
          ****************************/
 
         { // automatically adding '/' while adding path.
-            cout << endl << "----------------------[ Boost Filesystem Test #2" << endl;
+            cout << endl << "----------------------[ Boost Filesystem Test #" << testNo++ << endl;
             bfs::path path1("local/include");
             bfs::path path2 = operator/("/user",path1);
             bfs::path path3 = operator/("/user/",path1);
@@ -62,7 +63,7 @@ int main()
 
 
         { // Recursive directory removing and generation.
-            cout << endl << "----------------------[ Boost Filesystem Test #3" << endl;
+            cout << endl << "----------------------[ Boost Filesystem Test #" << testNo++ << endl;
             std::string recursiveDirPath("./recur_dir_test/test1/depth2");
             std::cout << "Generate directory : " << recursiveDirPath << endl;
             if ( bfs::create_directories( recursiveDirPath ) )
@@ -83,7 +84,7 @@ int main()
         // }
 
         { // Find the last file which have same prefix using file_size function.
-            cout << endl << "----------------------[ Boost Filesystem Test #5" << endl;
+            cout << endl << "----------------------[ Boost Filesystem Test #" << testNo++ << endl;
 
             // Generate 2009_1.log ~ 2009_20.log files
             ofstream fpout;
@@ -130,9 +131,18 @@ int main()
 
         }
 
+        { // File size display
+            cout << endl << "----------------------[ Boost Filesystem Test #" << testNo++ << endl;
+            std::string fileName( "FileSizeTest.sample" );
+            ofstream fpout(fileName.c_str());
+            fpout << "abcdefghijklmnopqrstuvwxyz"; // 26 characters == 26 bytes
+            fpout.close();
 
+            uintmax_t fileSize = bfs::file_size( fileName );
+            cout << "File Size : " << fileSize << " Bytes" << endl;
 
-
+            bfs::remove( fileName );
+        }
 
     } catch ( bfs::filesystem_error e ) {
         std::cerr << "Exception message : " << e.what() << std::endl;
