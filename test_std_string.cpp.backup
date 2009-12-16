@@ -6,6 +6,7 @@ int main()
 {
     { // operator[] and at() boundary test 
         string a("abc");
+        printf("%d\n", a[10] );
         cout << "Length   : " << a.length() << endl;
         cout << "a[10]    : (" << a[10] << ")" << endl;
         cout << "Length   : " << a.length() << endl;
