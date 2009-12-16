@@ -1,0 +1,31 @@
+#include <iostream>
+#include <iomanip>
+
+using namespace std;
+
+int main()
+{
+    { // compare printf and cout
+        int intValue = 13;
+
+        printf ("printf output : [%05d] [%-5d]\n", intValue, intValue);
+        std::cout << "cout output   : [" << std::setfill('0') << std::setw(5) << intValue << "] [";
+        std::cout << std::setw(5) << intValue << "]" << endl;
+    }
+    { // snprintf usage
+        // Count  : 1234567890123456789
+        //                   1
+        // Format : 2009-03-12 03:12:07
+        int year = 2009;
+        int month = 3;
+        int day = 12;
+        int hour = 3;
+        int min = 12;
+        int sec = 7; 
+
+        char buf[50];
+        // param : buffer, maximum buffer size, rest of the snprintf param
+        snprintf(buf, 50, "%4d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, min, sec);
+        cout << "Output : " << buf << endl;
+    }
+}
