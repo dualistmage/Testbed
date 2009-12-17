@@ -45,6 +45,13 @@ int main()
         // param : buffer, maximum buffer size, rest of the snprintf param
         snprintf(buf, 50, "%4d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, min, sec);
         cout << "Output 1 : " << buf << endl;
+
+        //                --------
+        float duration1 = 45.678;
+        float duration2 = 0.1234567;
+        snprintf(buf, 50, "[%010.8f] [%010.8f]\n", duration1, duration2);
+        cout << "Output 1': " << buf << endl;
+
     }
     { // vsnprintf test
 
