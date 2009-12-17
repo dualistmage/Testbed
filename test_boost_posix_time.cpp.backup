@@ -63,6 +63,16 @@ int main()
 
         cout << "Plus  Duration : " << plusDuration  << endl;
         cout << "Minus Duration : " << minusDuration << endl;
+
+        // Time duration format
+        boost::posix_time::ptime microNow = boost::posix_time::microsec_clock::local_time();
+        boost::posix_time::time_duration microDuration = microNow - now;
+        double doubleDuration = static_cast<double>(microDuration.total_microseconds()) / 1000000.0;
+
+        cout << "CurTime      : " << now << endl;
+        cout << "CurMicroTime : " << microNow << endl;
+        cout << "Duration disp: " << microDuration << endl;
+        printf( "Diff         : %f\n", doubleDuration);
     }
 
     { // Date Duration test
