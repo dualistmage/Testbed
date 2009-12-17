@@ -1,0 +1,19 @@
+#include <iostream>
+#include <fstream>
+
+using namespace std;
+
+int main()
+{
+    { // append string in the behind of the file.
+        ofstream fpout;
+        fpout.open("hello.test", ios::app | ios::binary ); 
+        fpout << "a";
+        fpout.close();
+
+        fpout.open("hello.test", ios::app | ios::binary); // it will write b after a
+        fpout << "b";
+        fpout.close();
+    }
+}
+
