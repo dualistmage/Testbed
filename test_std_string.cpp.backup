@@ -10,7 +10,14 @@ int main()
         cout << "Length   : " << a.length() << endl;
         cout << "a[10]    : (" << a[10] << ")" << endl;
         cout << "Length   : " << a.length() << endl;
-        cout << "a.at(15) : (" << a.at(15) << ")" << endl;
+        // cout << "a.at(15) : (" << a.at(15) << ")" << endl; // Exception occurs.
         cout << "Length   : " << a.length() << endl;
+    }
+
+    { // operator + test
+        std::string collectionName("KorNews");
+        std::string test1("/home/wisenut/dualistmage/");
+        std::string test2( test1 + "querylog_" + collectionName + ".dat" );
+        cout << "operator + : " << test2 << endl;
     }
 }
