@@ -20,4 +20,28 @@ int main()
         std::string test2( test1 + "querylog_" + collectionName + ".dat" );
         cout << "operator + : " << test2 << endl;
     }
+
+    { // operator < test
+        std::string test1, test2;
+        test1 = "abc"; test2 = "abcd"; 
+        cout << "Term (" << test1 << "," << test2 << ") : " << (test1 < test2) << " " << (test1.compare(test2)) << endl;
+        test1 = "abb"; test2 = "abcd"; 
+        cout << "Term (" << test1 << "," << test2 << ") : " << (test1 < test2) << " " << (test1.compare(test2)) << endl;
+        test1 = "abd"; test2 = "abcd"; 
+        cout << "Term (" << test1 << "," << test2 << ") : " << (test1 < test2) << " " << (test1.compare(test2)) << endl;
+
+        test1 = "abcd"; test2 = "abc"; 
+        cout << "Term (" << test1 << "," << test2 << ") : " << (test1 < test2) << " " << (test1.compare(test2)) << endl;
+        test1 = "abbd"; test2 = "abc"; 
+        cout << "Term (" << test1 << "," << test2 << ") : " << (test1 < test2) << " " << (test1.compare(test2)) << endl;
+        test1 = "abdd"; test2 = "abc"; 
+        cout << "Term (" << test1 << "," << test2 << ") : " << (test1 < test2) << " " << (test1.compare(test2)) << endl;
+
+        test1 = "abc"; test2 = "abc"; 
+        cout << "Term (" << test1 << "," << test2 << ") : " << (test1 < test2) << " " << (test1.compare(test2)) << endl;
+        test1 = "abc"; test2 = "abd"; 
+        cout << "Term (" << test1 << "," << test2 << ") : " << (test1 < test2) << " " << (test1.compare(test2)) << endl;
+        test1 = "abd"; test2 = "abc"; 
+        cout << "Term (" << test1 << "," << test2 << ") : " << (test1 < test2) << " " << (test1.compare(test2)) << endl;
+    }
 }

@@ -6,6 +6,7 @@ CXX = g++
 ifneq ($(COMPILE_FLAGS),)
 CXXFLAGS += $(COMPILE_FLAGS) 
 else
+#CXXFLAGS = -Wall -O3 -g
 CXXFLAGS = -Wall -O3 -g
 endif
 
@@ -18,7 +19,8 @@ INCLUDE_PATH = \
 			   -I $(BOOST)/include \
 			   -I $(WISELIB)/include \
 			   -I $(IZENELIB)/include \
-			   -I $(GLOG_PATH)/include
+			   -I $(GLOG_PATH)/include \
+			   -I $(SF1V5_ROOT)/source/core/include \
 
 LIB_FLAGS = $(LIB_PATH) $(LIB)
 
