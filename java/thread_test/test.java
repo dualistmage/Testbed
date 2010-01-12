@@ -7,6 +7,11 @@ public class test
         Thread b = new Thread(t2);
         a.start();
         b.start();
+
+        a.join();
+        b.join();
+
+        System.out.println("Job done.");
     } // end - main()
 } // end - test
 
@@ -19,7 +24,8 @@ class MyRunnable implements Runnable {
     } // end - MyRunnable
 
     public void run() {
-        while(true) {
+        int a = 100;
+        while(a > 0) {
             // ---------------------------------------------
             // This is the area which thread is going to do.
             // ---------------------------------------------
@@ -28,6 +34,7 @@ class MyRunnable implements Runnable {
             } catch ( InterruptedException e ) {
             }
             System.out.println("Waiting " + sleepTime_ + " secs");
+            a--;
         }
     }
 
