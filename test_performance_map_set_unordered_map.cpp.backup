@@ -5,12 +5,14 @@
 
 #include <set>
 #include <map>
+#include <ext/hash_map>
 
 #include <iostream>
 
 using std::cout;
 using std::endl;
 using std::make_pair;
+using namespace __gnu_cxx;
 
 void top5doc()
 {
@@ -20,6 +22,7 @@ int main(int argc, char* argv[])
 {
     top5doc();
     std::map<uint64_t,bool> test_map;
+    hash_map<uint64_t,bool> test_hashmap;
     std::set<uint64_t> test_set;
     boost::unordered_map<uint64_t,bool> test_umap;
     izenelib::am::rde_hash<uint64_t,bool> test_rde;
@@ -38,6 +41,12 @@ int main(int argc, char* argv[])
         test_map.insert(make_pair(i,true));
     td = boost::posix_time::microsec_clock::local_time() - begin;
     cout << "Map : " << td << endl;
+    begin = boost::posix_time::microsec_clock::local_time();
+    for(uint64_t i = 0; i < MAX_NUM; i++)
+        test_hashmap.insert(make_pair(i,true));
+    td = boost::posix_time::microsec_clock::local_time() - begin;
+    cout << "HashMap : " << td << endl;
+
     begin = boost::posix_time::microsec_clock::local_time();
     for(uint64_t i = 0; i < MAX_NUM; i++)
         test_umap.insert(make_pair(i,true));
@@ -62,6 +71,14 @@ int main(int argc, char* argv[])
             cout << "Failed";
     td = boost::posix_time::microsec_clock::local_time() - begin;
     cout << "Map : " << td << endl;
+
+    begin = boost::posix_time::microsec_clock::local_time();
+    for(uint64_t i = 0; i < MAX_NUM; i++)
+        if ( test_hashmap.end() == test_hashmap.find(i) )
+            cout << "Failed";
+    td = boost::posix_time::microsec_clock::local_time() - begin;
+    cout << "HashMap : " << td << endl;
+
     begin = boost::posix_time::microsec_clock::local_time();
     for(uint64_t i = 0; i < MAX_NUM; i++)
         if ( test_umap.end() == test_umap.find(i) )
