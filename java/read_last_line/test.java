@@ -3,32 +3,34 @@
 /// @author Dohyun Yun
 ///
 
-import java.io.File;
-import java.io.RandomAccessFile;
+import java.io.*;
 
 
 class test
 {
     public static void main(String[] args) throws Exception {
+        method1();
+        method2();
+    } // end - main()
+
+    ///
+    /// @brief Fast and memory usage is efficient, but multi-byte character is broken.
+    ///
+    private static void method1() throws Exception {
         try {
             File file = new File("test.txt");
             RandomAccessFile rfile = new RandomAccessFile(file,"r"); 
-            long pos = file.length(); // pos will go to the end of file.
+            long pos = file.length()-1; // pos will go to one ahead of EOF.
             int meetNewLine=0;
             while ( pos > 0 )
             {
-                byte curByte = rfile.readByte();
-                if ( curByte == (byte)'\n' ) // only for linux
+                rfile.seek(pos);
+                if ( rfile.readByte() == (byte)'\n' ) // only for linux
                 {
                     meetNewLine++;
                     if ( meetNewLine == 2 ) break;
                 }
-                //System.out.println("--------------------------------------------");
-                //System.out.println("Cur Byte    : " + Byte.toString( curByte ) );
-                //System.out.println("Pos         : " + Long.toString( pos ) );
-                //System.out.println("meetNewLine : " + meetNewLine );
                 pos--;
-                rfile.seek(pos);
             }
             pos++;
             rfile.seek(pos);
@@ -41,6 +43,27 @@ class test
         } catch (Exception e) {
             e.printStackTrace();
         }
-    } // end - main()
+    }
 
+    ///
+    /// @brief Safe for multi-byte character but it spends memory as much as the size of the file.
+    ///
+    private static void method2() throws Exception { 
+        String lastLine = null;
+        try {
+            FileInputStream fpin = new FileInputStream( "test.txt" );
+            BufferedReader br = new BufferedReader(new InputStreamReader(fpin) );
+
+            String tmp;
+            while( (tmp = br.readLine()) != null)
+                lastLine = tmp;
+
+            fpin.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println( "----------------------------------------------------" );
+        System.out.println( "Last line string : " + lastLine );
+        System.out.println( "----------------------------------------------------" );
+    }
 } // end - test
