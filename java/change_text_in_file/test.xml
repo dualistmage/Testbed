@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SampleRoot>
+    <System>
+        <BrokerAgent usecache="y" querythreadnum="30" collectionthreadnum="60"/>
+    </System>
+</SampleRoot>
