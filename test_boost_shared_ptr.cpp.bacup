@@ -1,0 +1,34 @@
+///
+/// @file   test_boost_shared_ptr.cpp
+/// @author Dohyun Yun ( dualistmage@gmail.com )
+/// @brief  This test code contains variable usage of boost::shared_ptr
+/// @details
+///     - 1. Release memory of shared_ptr.
+///
+
+#include <iostream>
+#include <boost/shared_ptr.hpp>
+
+class Foo
+{ 
+    public:
+        Foo( int _x ) : x(_x) {}
+        ~Foo() { std::cout << "Destructing a Foo with x=" << x << "\n"; }
+        int x;
+};
+
+typedef boost::shared_ptr<Foo> FooPtr;
+
+int main()
+{
+    { // Test 1
+        FooPtr test;
+        test.reset( new Foo(3) );
+        std::cout << "Foo is generated : " << test->x << std::endl;
+        test.reset();
+        std::cout << "Foo is deleted : " << std::endl;
+    }
+
+    return 0;
+}
+
