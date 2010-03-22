@@ -4,10 +4,15 @@
 /// @brief  This test code contains variable usage of boost::shared_ptr
 /// @details
 ///     - 1. Release memory of shared_ptr.
+///     - 2. Use dynamic_pointer_cast
 ///
 
 #include <iostream>
 #include <boost/shared_ptr.hpp>
+#include <boost/pointer_cast.hpp>
+
+using std::cout;
+using std::endl;
 
 class Foo
 { 
@@ -17,16 +22,95 @@ class Foo
         int x;
 };
 
+class MainA
+{
+    public:
+        MainA(int value) : value_(value) {}
+        virtual ~MainA() {};
+        virtual void print() { cout << "MainA : " << value_ << endl; }
+
+        int value_;
+}; // end - MainA
+
+class DerivedA : public MainA
+{
+    public:
+        DerivedA(int value) : MainA(value), value2_(123) {}
+        void print() { cout << "DerivedA : " << value_ << "," << value2_ << endl; }
+    private:
+        int value2_;
+
+}; // end - class DerivedA
+
+class MemberA
+{
+    public:
+        boost::shared_ptr<MainA> obj_;
+}; // end - class MemberA
+
+
 typedef boost::shared_ptr<Foo> FooPtr;
 
 int main()
 {
     { // Test 1
+        cout << endl << "---------------------------- [ Test 1" << endl;
         FooPtr test;
         test.reset( new Foo(3) );
         std::cout << "Foo is generated : " << test->x << std::endl;
         test.reset();
-        std::cout << "Foo is deleted : " << std::endl;
+        std::cout << "Foo is deleted ..." << std::endl;
+    }
+    { // Test 2
+        cout << endl << "---------------------------- [ Test 2" << endl;
+        boost::shared_ptr<DerivedA> obj1( new DerivedA(3) );
+        boost::shared_ptr<MainA>    obj2( boost::dynamic_pointer_cast<MainA>(obj1) );
+        boost::shared_ptr<DerivedA> obj3( new DerivedA(7) );
+        obj1->print();
+        obj2->print();
+        boost::static_pointer_cast<MainA>(obj2)->print();
+        boost::dynamic_pointer_cast<MainA>(obj2)->print();
+    }
+    { // Test 3 : shared_ptr member variable have null if there's no assignment
+        cout << endl << "---------------------------- [ Test 3" << endl;
+        FooPtr test;
+        if ( !test )
+            cout << "Test is null" << endl;
+        test.reset( new Foo(3) );
+        if ( test )
+            cout << "Test is not null" << endl;
+        test.reset();
+        if ( !test )
+            cout << "Test is null" << endl;
+        MemberA obj;
+        if ( !obj.obj_ )
+            cout << "Test is null" << endl;
+    }
+    { // Test 4 : Check the change of reference count
+        cout << endl << "---------------------------- [ Test 3" << endl;
+        boost::shared_ptr<MainA> obj1( new MainA(3) );
+        cout << "obj1 Count : " << obj1.use_count() << endl << endl;
+
+        boost::shared_ptr<MainA> obj2( obj1 );
+        cout << "obj1 Count : " << obj1.use_count() << endl;
+        cout << "obj2 Count : " << obj2.use_count() << endl << endl;
+
+        boost::shared_ptr<MainA> obj3( new MainA(7) );
+        obj2 = obj3;
+        obj1->print();
+        obj2->print();
+        obj3->print();
+        cout << "obj1 Count : " << obj1.use_count() << endl;
+        cout << "obj2 Count : " << obj2.use_count() << endl;
+        cout << "obj3 Count : " << obj3.use_count() << endl << endl;
+
+        obj1 = obj3;
+        obj1->print();
+        obj2->print();
+        obj3->print();
+        cout << "obj1 Count : " << obj1.use_count() << endl;
+        cout << "obj2 Count : " << obj2.use_count() << endl;
+        cout << "obj3 Count : " << obj3.use_count() << endl << endl;
     }
 
     return 0;
