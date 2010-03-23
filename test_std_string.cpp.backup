@@ -1,3 +1,8 @@
+///
+/// @file test_std_string.cpp
+/// @brief Test code of std::string
+/// @author Dohyun Yun ( dualistmage@nate.com )
+/// 
 #include <iostream>
 
 using namespace std;
@@ -43,5 +48,13 @@ int main()
         cout << "Term (" << test1 << "," << test2 << ") : " << (test1 < test2) << " " << (test1.compare(test2)) << endl;
         test1 = "abd"; test2 = "abc"; 
         cout << "Term (" << test1 << "," << test2 << ") : " << (test1 < test2) << " " << (test1.compare(test2)) << endl;
+    }
+
+    { // substr()
+        std::string input("abcdefg"), prefix, suffix;
+        prefix = input.substr(0, 4); // "abcd"
+        suffix = input.substr(4); // 4 to end "efg"
+        cout << "Prefix : " << prefix << endl;
+        cout << "Suffix : " << suffix << endl;
     }
 }
