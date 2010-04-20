@@ -1,3 +1,8 @@
+///
+/// @file test_std_io.cpp.backup
+/// @brief Test code of printf family
+/// @author Dohyun Yun ( dualistmage@nate.com )
+/// 
 #include <iostream>
 #include <iomanip>
 
@@ -61,5 +66,16 @@ int main()
         int cnt2 = snprintf(buf2, sizeof(buf2), "%03d", 12);
         cout << "Output 2 : " << buf << endl;
         cout << "Output 2 : " << buf2 << endl;
+    }
+    { // snprintf test
+        char fmt1[] = {"Print %d %s.\n"};
+        char fmt2[] = {"Print %d.\n"};
+        char output[256];
+        snprintf(output, 255, fmt1, 7787, "fmt1"); cout << output << endl;
+        snprintf(output, 255, fmt2, 7787, "fmt1"); cout << output << endl;
+        snprintf(output, 255, fmt1, 7787); cout << output << endl;
+        snprintf(output, 255, fmt2, 7787); cout << output << endl;
+        snprintf(output, 255, fmt1); cout << output << endl;
+        snprintf(output, 255, fmt2); cout << output << endl;
     }
 }
