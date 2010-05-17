@@ -1,0 +1,54 @@
+#include <iostream>
+#include <set>
+
+using std::cout;
+using std::endl;
+
+struct SortStruct {
+    bool operator () ( uint64_t lhs , uint64_t rhs ) const
+    {
+        return lhs < rhs;
+    }
+};
+
+int main()
+{
+    { // Set will manage items in increasing order.
+        std::set<uint64_t> test;
+
+        test.insert( 3 );
+        test.insert( 5 );
+        test.insert( 1 );
+        test.insert( 4 );
+        test.insert( 2 );
+
+        std::set<uint64_t>::iterator iter = test.begin();
+        for(; iter != test.end(); iter++)
+            cout << "Item : " << *iter << endl;
+    }
+    {
+
+        std::set<uint64_t , SortStruct> test;
+        test.insert(27);
+        test.insert(31);
+        test.insert(51);
+        test.insert(12);
+        test.insert(36);
+        test.insert(39);
+        test.insert(19);
+        test.insert(34);
+        test.insert(75);
+        test.insert(28);
+        test.insert(17);
+        test.insert(24);
+
+
+        std::set<uint64_t,SortStruct>::const_iterator iter = test.begin();
+        for(; iter != test.end(); iter++)
+        {
+            cout << "Item : " << *iter << endl;
+        }
+    }
+
+    cerr << BOOST_VERSION << endl;
+} // end - main()
