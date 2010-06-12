@@ -21,6 +21,25 @@ bool does_exist(const bfs::path& path)
 }*/
 
 
+unsigned long dirSize(const std::string& dirPath, bool recursive = false)
+{
+    unsigned long tmpSize = 0;
+    bfs::directory_iterator dirIter = bfs::directory_iterator(dirPath);
+    bfs::directory_iterator dirIterEnd;
+    for(; dirIter != dirIterEnd; dirIter++)
+    {
+        if ( bfs::is_directory(*dirIter) )
+        {
+            if ( recursive )
+                tmpSize += dirSize(dirIter->string(), true);
+            continue;
+        }
+        cout << "   - " << dirIter->string() << " : " << bfs::file_size(*dirIter) << endl;
+        tmpSize += bfs::file_size(*dirIter);
+    }
+    return tmpSize;
+}
+
 int main()
 {
     int testNo = 1;
@@ -144,6 +163,11 @@ int main()
             bfs::remove( fileName );
         }
 
+        { // Directory size display
+            const std::string dirPath("./");
+            cout << "Dir(" << dirPath << ") Size : " << dirSize(dirPath, true) << endl;;
+        }
+
     } catch ( bfs::filesystem_error e ) {
         std::cerr << "Exception message : " << e.what() << std::endl;
         std::cerr << "Path1 : " << e.path1() << std::endl;
@@ -151,4 +175,5 @@ int main()
     }
 
 }
+
 
