@@ -1,0 +1,29 @@
+#include <iostream>
+#include "SEED_256_KISA.h"
+#include "Encryptor.h"
+
+using namespace std;
+
+int main()
+{
+    int i;
+    std::string test;
+    getline(cin, test);
+    size_t len = test.size();
+    char* data = new char[len + 1];
+    strncpy(data, test.c_str(), len);
+
+    cout << "Size : " << len << endl;
+    cout << "ORI : " << data << endl;;
+
+    Encryptor enc;
+    enc.encode( (BYTE*)data );
+    cout << "ENC : ";
+    for(i=0; i < len; i++)
+        printf("%d ", data[i]);
+    cout << endl;
+
+    enc.decode( (BYTE*)data );
+    cout << "DEC : " << data << endl;;
+
+} // end - main
