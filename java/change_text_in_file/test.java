@@ -1,6 +1,6 @@
 ///
 /// @brief  This code will change usecache="y" to "n" and display the text and recover it to the previous one.
-/// @author Dohyun Yun
+/// @author Dohyun Yun ( dualistmage@gmail.com )
 ///
 
 import java.io.*;
@@ -26,7 +26,6 @@ class test
             RandomAccessFile rfile = new RandomAccessFile(file,"rw"); 
             long pos = 0;
             long fileLen = file.length();
-            int meetNewLine = 0;
             while ( pos < fileLen )
             {
                 rfile.seek(pos);

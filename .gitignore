@@ -1,0 +1,7 @@
+*.o
+*.swp
+*.swo
+*.jar
+*.class
+./main.cpp
+./makefile
