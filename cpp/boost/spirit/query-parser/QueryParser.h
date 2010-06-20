@@ -32,7 +32,6 @@ namespace sf1v5 {
             typedef parse_tree_match_t::tree_iterator iter_t;
 
             static const int rootQueryID        = 100;
-            static const int queryID            = 101;
             static const int stringQueryID      = 200;
             static const int boolQueryID        = 300;
             static const int boolRootQueryID    = 301;
@@ -53,8 +52,11 @@ namespace sf1v5 {
                 {
                     static const std::string operStr(" |!(){}[]^\"");
 
-                    rootQuery = root_node_d[eps_p] >> +query;
-                    query = boolQuery | exactQuery | orderedQuery | nearbyQuery;
+                    rootQuery = root_node_d[eps_p] >> +boolQuery;
+
+                    boolQuery = (stringQuery | notQuery | priorQuery | exactQuery | orderedQuery | nearbyQuery) 
+                        >> !( (root_node_d[ch_p(' ')] >> boolQuery) | (root_node_d[ch_p('|')] >> boolQuery) );
+                    notQuery = root_node_d[ch_p('!')] >> (stringQuery | priorQuery);
 
                     stringQuery = leaf_node_d[ lexeme_d[+(~chset_p(operStr.c_str()))] ];
 
@@ -64,28 +66,15 @@ namespace sf1v5 {
                     orderedQuery = root_node_d[ch_p('[')] >> orderedString >> no_node_d[ch_p(']')];
                     orderedString = leaf_node_d[ lexeme_d[+(~ch_p(']'))] ];
 
-                    nearbyQuery = root_node_d[ch_p('{')] >> nearbyString >> no_node_d[ch_p('}')] >> no_node_d[ch_p('^')] >> uint_p;
+                    nearbyQuery = root_node_d[ch_p('{')] >> nearbyString >> no_node_d[ch_p('}')] 
+                        >> no_node_d[ch_p('^')] >> uint_p;
                     nearbyString = leaf_node_d[ lexeme_d[+(~ch_p('}'))] ];
-                    
-                    boolQuery = (stringQuery | priorQuery) >> !( (root_node_d[ch_p(' ')] >> boolQuery) | (root_node_d[ch_p('|')] >> boolQuery) ) | notQuery;
-                    //andQuery =  root_node_d[ch_p(' ')] >> boolQuery;
-                    //orQuery = root_node_d[ch_p('|')] >> boolQuery;
-                    notQuery = root_node_d[ch_p('!')] >> stringQuery;
 
-                    priorQuery = inner_node_d[ch_p('(') >> query >> ch_p(')')];
-
-                    /*
-                    boolQuery = stringQuery | notQuery | andQuery | orQuery;
-                    andQuery =  boolQuery >> root_node_d[ch_p(' ')] >> boolQuery; 
-                    orQuery = query >> +(root_node_d[ch_p('|')] >> query); 
-                    notQuery = root_node_d[ch_p('!')] >> query;
-                    */
-                    
+                    priorQuery = inner_node_d[ch_p('(') >> boolQuery >> ch_p(')')];
 
                 } // end - definition()
 
                 rule<ScannerT, parser_context<>, parser_tag<rootQueryID> > rootQuery;
-                rule<ScannerT, parser_context<>, parser_tag<queryID> >   query;
                 rule<ScannerT, parser_context<>, parser_tag<stringQueryID> > stringQuery;
                 rule<ScannerT, parser_context<>, parser_tag<boolQueryID> > boolQuery;
                 rule<ScannerT, parser_context<>, parser_tag<andQueryID> > andQuery;
@@ -104,10 +93,6 @@ namespace sf1v5 {
                 rule<ScannerT, parser_context<>, parser_tag<rootQueryID> > const& start() const { return rootQuery; } // Return Start rule of rule in 
             }; // end - definition
 
-        private:
-
-            //static boost::unordered_map< int , QueryTree::QueryType > queryTypeMap_; // ID - type enum
-
         public: // static interface
 
             //static void initOnlyOnce();
@@ -117,8 +102,8 @@ namespace sf1v5 {
 
             //static void initOnlyOnceCore();
             static void getQueryTree(iter_t const& i, QueryTreePtr& queryTree);
-            static void processKeywordAssignQuery( iter_t const& i, 
-                    QueryTree::QueryType queryType, QueryTreePtr& queryTree);
+            static void processKeywordAssignQuery( iter_t const& i, QueryTreePtr& queryTree);
+            static void processBracketQuery( iter_t const& i, QueryTree::QueryType queryType, QueryTreePtr& queryTree);
             static void processBoolQuery(iter_t const& i, QueryTreePtr& queryTree);
             static void processChildTree(iter_t const& i, QueryTreePtr& queryTree);
 

@@ -9,8 +9,6 @@
 namespace sf1v5 {
 
     /*
-    boost::unordered_map< int , QueryTree::QueryType > queryTypeMap_;
-
     void QueryParser::initOnlyOnce()
     {
         static boost::once_flag once = BOOST_ONCE_INIT;
@@ -20,7 +18,6 @@ namespace sf1v5 {
     void QueryParser::initOnlyOnceCore()
     {
         using namespace std;
-        queryTypeMap_.insert( make_pair( complexID      , QueryTree::COMPLEX ) );
         queryTypeMap_.insert( make_pair( andQueryID     , QueryTree::AND     ) );
         queryTypeMap_.insert( make_pair( orQueryID      , QueryTree::OR      ) );
         queryTypeMap_.insert( make_pair( notQueryID     , QueryTree::NOT     ) );
@@ -47,40 +44,49 @@ namespace sf1v5 {
             << " (child size : " << i->children.size() << ")" << std::endl;
 
         if ( i->value.id() == stringQueryID )
-            processKeywordAssignQuery(i, QueryTree::KEYWORD, queryTree);
+            processKeywordAssignQuery(i, queryTree);
         else if  (i->value.id() == exactQueryID )
-            processKeywordAssignQuery(i, QueryTree::EXACT, queryTree);
-        else if ( i->value.id() == orderedQueryID ) {
-            processKeywordAssignQuery(i, QueryTree::ORDER, queryTree);
-        } // end - orderedQueryID
-        else if ( i->value.id() == nearbyQueryID ) {
-            QueryTreePtr tmpQueryTree;
-            processKeywordAssignQuery(i, QueryTree::NEARBY, tmpQueryTree);
-
-            // Store distance
-            iter_t distIter = i->children.begin()+1;
-            std::string distStr( distIter->value.begin(), distIter->value.end() );
-            tmpQueryTree->distance_ = atoi( distStr.c_str() );
-
-            queryTree.swap( tmpQueryTree );
-        } // end - orderedQueryID
+            processBracketQuery(i, QueryTree::EXACT, queryTree);
+        else if ( i->value.id() == orderedQueryID )
+            processBracketQuery(i, QueryTree::ORDER, queryTree);
+        else if ( i->value.id() == nearbyQueryID )
+            processBracketQuery(i, QueryTree::NEARBY, queryTree);
         else if ( i->value.id() == boolQueryID )
             processBoolQuery(i, queryTree);
         else 
             processChildTree(i, queryTree);
     } // end - getQueryTree()
 
-    void QueryParser::processKeywordAssignQuery( iter_t const& i, 
-            QueryTree::QueryType queryType, QueryTreePtr& queryTree)
+    void QueryParser::processKeywordAssignQuery( iter_t const& i, QueryTreePtr& queryTree)
     {
-            std::string tmpString( i->value.begin(), i->value.end() );
-            if ( queryType == QueryTree::KEYWORD 
-                    && (tmpString.find('*') != std::string::npos || tmpString.find('?') != std::string::npos ) )
-                queryType = QueryTree::WILDCARD;
-            QueryTreePtr tmpQueryTree(new QueryTree(queryType));
-            tmpQueryTree->keyword_.swap( tmpString );
-            queryTree.swap( tmpQueryTree );
+        QueryTree::QueryType queryType(QueryTree::KEYWORD);
+        std::string tmpString( i->value.begin(), i->value.end() );
+        if ( tmpString.find('*') != std::string::npos || tmpString.find('?') != std::string::npos )
+            queryType = QueryTree::WILDCARD;
+        QueryTreePtr tmpQueryTree(new QueryTree(queryType));
+        tmpQueryTree->keyword_.swap( tmpString );
+        queryTree.swap( tmpQueryTree );
     } // end - processKeywordAssignQuery()
+
+    void QueryParser::processBracketQuery(iter_t const& i, QueryTree::QueryType queryType, QueryTreePtr& queryTree)
+    {
+        QueryTreePtr tmpQueryTree(new QueryTree(queryType));
+
+        // Extract String
+        iter_t childIter = i->children.begin();
+        std::string tmpString( childIter->value.begin(), childIter->value.end() );
+        tmpQueryTree->keyword_.swap( tmpString );
+
+        if ( queryType == QueryTree::NEARBY )
+        {
+            // Store distance
+            iter_t distIter = i->children.begin()+1;
+            std::string distStr( distIter->value.begin(), distIter->value.end() );
+            tmpQueryTree->distance_ = atoi( distStr.c_str() );
+        }
+
+        queryTree.swap( tmpQueryTree );
+    } // end - processBracketQuery()
 
     void QueryParser::processBoolQuery(iter_t const& i, QueryTreePtr& queryTree)
     {
@@ -134,8 +140,7 @@ namespace sf1v5 {
     void QueryParser::processChildTree(iter_t const& i, QueryTreePtr& queryTree)
     {
         QueryTree::QueryType queryType;
-        if ( i->value.id() == rootQueryID ) queryType = QueryTree::COMPLEX;
-        else if ( i->value.id() == notQueryID ) queryType = QueryTree::NOT;
+        if ( i->value.id() == notQueryID ) queryType = QueryTree::NOT;
         else queryType = QueryTree::UNKNOWN;
 
         QueryTreePtr tmpQueryTree( new QueryTree(queryType) );
@@ -150,7 +155,6 @@ namespace sf1v5 {
         }
         tmpQueryTree.swap( queryTree );
     } // end - processChildTree
-
 
 
 } // end - namespace sf1v5

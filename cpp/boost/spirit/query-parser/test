@@ -1,0 +1,9 @@
+!가나다 라마
+!(가나다 라마)
+(first second)|("abcde fg!{}[]^" {hello kity}^14 [ordered query])
+AND tree test
+(AND tree) test
+(Double AND) (Test case)
+(Double AND) (Test (Hello|body) case)
+(Double AND) (Test !(Hello|body) case)
+(Double AND) !(Test !(Hello|body) case)

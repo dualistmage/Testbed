@@ -16,7 +16,7 @@ namespace sf1v5 {
     class QueryTree
     {
         public:
-            enum QueryType { KEYWORD, WILDCARD, AND, OR, NOT, EXACT, ORDER, NEARBY, COMPLEX, UNKNOWN } type_; 
+            enum QueryType { KEYWORD, WILDCARD, AND, OR, NOT, EXACT, ORDER, NEARBY, UNKNOWN } type_; 
             std::list<boost::shared_ptr<QueryTree> > children_;
 
             // For KEYWORD and WILDCARD Type

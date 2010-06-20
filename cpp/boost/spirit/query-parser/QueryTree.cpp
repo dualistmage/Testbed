@@ -56,9 +56,6 @@ namespace sf1v5 {
             case QueryTree::NEARBY:
                 ss << "NEARBY   :" << keyword_ << ":distance(" << distance_ << ") ]" << endl;
                 break;
-            case QueryTree::COMPLEX:
-                ss << "COMPLEX  : ]" << endl;
-                break;
             default:
                 ss << "UNKNOWN  : ]" << endl;
                 break;
