@@ -1,3 +1,9 @@
+///
+/// @brief  source file of Query Parser
+/// @author Dohyun Yun
+/// @date   2010.06.16 (First Created)
+/// 
+
 #include "QueryParser.h"
 
 namespace sf1v5 {
@@ -36,73 +42,104 @@ namespace sf1v5 {
 
     void QueryParser::getQueryTree(iter_t const& i, QueryTreePtr& queryTree)
     {
-        std::cout << "//////////////////  i->value : " << std::string(i->value.begin(), i->value.end()) 
+        std::cout << "------------------------[ i->value : " 
+            << std::string(i->value.begin(), i->value.end()) 
             << " (child size : " << i->children.size() << ")" << std::endl;
 
-        if  (i->value.id() == exactStringID ) {
-            std::cout << "ExactString : " << std::endl;
-
-            // Create temporary query tree of KEYWORD query type
-            QueryTreePtr tmpQueryTree(new QueryTree(QueryTree::KEYWORD));
-            tmpQueryTree->keyword_.assign( i->value.begin(), i->value.end() );
-            queryTree.swap( tmpQueryTree );
-        } // end -exactString()
-        else if ( i->value.id() == stringQueryID ) {
-            std::cout << "String : " << std::endl;
-            std::string tmpString( i->value.begin(), i->value.end() );
-
-            QueryTreePtr tmpQueryTree;
-
-            // Find if wildcard char is in the string.
-            if ( tmpString.find('*') != std::string::npos || tmpString.find('?') != std::string::npos ) 
-                tmpQueryTree.reset(new QueryTree(QueryTree::WILDCARD));
-            else
-                tmpQueryTree.reset(new QueryTree(QueryTree::KEYWORD));
-
-            tmpQueryTree->keyword_.swap( tmpString );
-            queryTree.swap( tmpQueryTree );
-        } // end - stringQuery
+        if ( i->value.id() == stringQueryID )
+            processKeywordAssignQuery(i, QueryTree::KEYWORD, queryTree);
+        else if  (i->value.id() == exactQueryID )
+            processKeywordAssignQuery(i, QueryTree::EXACT, queryTree);
         else if ( i->value.id() == orderedQueryID ) {
-            std::cout << "Ordered : " << std::endl;
-
-            QueryTreePtr tmpQueryTree(new QueryTree(QueryTree::ORDER));
-            tmpQueryTree->keyword_.assign( i->children.begin()->value.begin(), i->children.begin()->value.end() );
-            queryTree.swap( tmpQueryTree );
+            processKeywordAssignQuery(i, QueryTree::ORDER, queryTree);
         } // end - orderedQueryID
         else if ( i->value.id() == nearbyQueryID ) {
-            std::cout << "NearBy : " << std::endl;
+            QueryTreePtr tmpQueryTree;
+            processKeywordAssignQuery(i, QueryTree::NEARBY, tmpQueryTree);
 
-            QueryTreePtr tmpQueryTree(new QueryTree(QueryTree::NEARBY));
-            tmpQueryTree->keyword_.assign( i->children.begin()->value.begin(), i->children.begin()->value.end() );
-
-            std::string distance;
-            iter_t iter = i->children.begin()+1;
-            for(; iter != i->children.end(); iter++)
-                distance += *(iter->value.begin());
-            tmpQueryTree->distance_ = atoi(distance.c_str());
+            // Store distance
+            iter_t distIter = i->children.begin()+1;
+            std::string distStr( distIter->value.begin(), distIter->value.end() );
+            tmpQueryTree->distance_ = atoi( distStr.c_str() );
 
             queryTree.swap( tmpQueryTree );
         } // end - orderedQueryID
-        else {
+        else if ( i->value.id() == boolQueryID )
+            processBoolQuery(i, queryTree);
+        else 
             processChildTree(i, queryTree);
+    } // end - getQueryTree()
+
+    void QueryParser::processKeywordAssignQuery( iter_t const& i, 
+            QueryTree::QueryType queryType, QueryTreePtr& queryTree)
+    {
+            std::string tmpString( i->value.begin(), i->value.end() );
+            if ( queryType == QueryTree::KEYWORD 
+                    && (tmpString.find('*') != std::string::npos || tmpString.find('?') != std::string::npos ) )
+                queryType = QueryTree::WILDCARD;
+            QueryTreePtr tmpQueryTree(new QueryTree(queryType));
+            tmpQueryTree->keyword_.swap( tmpString );
+            queryTree.swap( tmpQueryTree );
+    } // end - processKeywordAssignQuery()
+
+    void QueryParser::processBoolQuery(iter_t const& i, QueryTreePtr& queryTree)
+    {
+        QueryTree::QueryType queryType;
+        switch( *(i->value.begin() ) ) {
+            case ' ': queryType = QueryTree::AND; break;
+            case '|': queryType = QueryTree::OR;  break;
+            default: queryType = QueryTree::UNKNOWN; 
+        } // end - switch
+        QueryTreePtr tmpQueryTree( new QueryTree(queryType) );
+
+        // Retrieve child query tree and insert it to the children_ list of tmpQueryTree.
+        iter_t iter = i->children.begin();
+        for(; iter != i->children.end(); iter++)
+        {
+            QueryTreePtr tmpChildQueryTree;
+            getQueryTree( iter, tmpChildQueryTree);
+            tmpQueryTree->insertChild( tmpChildQueryTree );
         }
 
+        // Merge unnecessarily divided bool-trees
+        //   - Children are always two : Binary Tree
+        QueryTreeIter first = tmpQueryTree->children_.begin();
+        QueryTreeIter second = first; second++;
+        if ( (*first)->type_ == queryType )
+        { 
+            // use first child tree as a root tree.
+            if ( (*second)->type_ == queryType )
+            {
+                // Move all children in second node into first ( Insert : first->end )
+                (*first)->children_.splice( (*first)->children_.end(), (*second)->children_ );
+            } // end - if
+            else
+            {
+                // Move second node into children in first ( Insert : first->end )
+                (*first)->children_.push_back( *second );
+            } // end - else
 
-
-    } // end - getQueryTree()
+            tmpQueryTree.swap( *first );
+        }
+        else if ((*second)->type_ == queryType )
+        {
+            // Move first node into children in second. ( Insert : second->begin )
+            (*second)->children_.push_front( *first );
+            tmpQueryTree.swap( *second );
+        }
+        
+        tmpQueryTree.swap( queryTree );
+    } // end - processBoolQuery()
 
     void QueryParser::processChildTree(iter_t const& i, QueryTreePtr& queryTree)
     {
         QueryTree::QueryType queryType;
-        if ( i->value.id() == complexID ) queryType = QueryTree::COMPLEX;
-        else if ( i->value.id() == andQueryID ) queryType = QueryTree::AND;
-        else if ( i->value.id() == orQueryID ) queryType = QueryTree::OR;
+        if ( i->value.id() == rootQueryID ) queryType = QueryTree::COMPLEX;
         else if ( i->value.id() == notQueryID ) queryType = QueryTree::NOT;
-        else if ( i->value.id() == exactQueryID ) queryType = QueryTree::EXACT;
-        else if ( i->value.id() == nearbyQueryID ) queryType = QueryTree::NEARBY;
         else queryType = QueryTree::UNKNOWN;
 
         QueryTreePtr tmpQueryTree( new QueryTree(queryType) );
+
         // Retrieve child query tree and insert it to the children_ list of tmpQueryTree.
         iter_t iter = i->children.begin();
         for(; iter != i->children.end(); iter++)

@@ -44,8 +44,11 @@ namespace sf1v5 {
             case QueryTree::OR:
                 ss << "OR       : ]" << endl;
                 break;
+            case QueryTree::NOT:
+                ss << "NOT      : ]" << endl;
+                break;
             case QueryTree::EXACT:
-                ss << "EXACT    : ]" << endl;
+                ss << "EXACT    :" << keyword_ << "]" << endl;
                 break;
             case QueryTree::ORDER:
                 ss << "ORDER    :" << keyword_ << "]" << endl;

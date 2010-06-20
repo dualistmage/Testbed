@@ -14,8 +14,9 @@ int main()
     {
         if ( queryString.empty() )
             break;
-        QueryParser::parseQuery(queryString, queryTree);
-
-        queryTree->print();
+        if ( QueryParser::parseQuery(queryString, queryTree) )
+            queryTree->print();
+        else
+            cout << "Parsing Fail" << endl;
     }
 } // end - main()

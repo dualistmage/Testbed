@@ -31,16 +31,21 @@ namespace sf1v5 {
             typedef tree_match<iterator_t> parse_tree_match_t;
             typedef parse_tree_match_t::tree_iterator iter_t;
 
-            static const int complexID          = 1;
-            static const int stringQueryID      = 100;
-            static const int boolQueryID        = 200;
-            static const int andQueryID         = 201;
-            static const int orQueryID          = 202;
-            static const int notQueryID         = 203;
-            static const int exactQueryID       = 300;
+            static const int rootQueryID        = 100;
+            static const int queryID            = 101;
+            static const int stringQueryID      = 200;
+            static const int boolQueryID        = 300;
+            static const int boolRootQueryID    = 301;
+            static const int andQueryID         = 302;
+            static const int orQueryID          = 303;
+            static const int notQueryID         = 304;
+            static const int exactQueryID       = 400;
             static const int exactStringID      = 401;
             static const int orderedQueryID     = 500;
+            static const int orderedStringID    = 501;
             static const int nearbyQueryID      = 600;
+            static const int nearbyStringID     = 601;
+            static const int priorQueryID       = 700;
 
             template <typename ScannerT> struct definition
             {
@@ -48,19 +53,30 @@ namespace sf1v5 {
                 {
                     static const std::string operStr(" |!(){}[]^\"");
 
-                    query = root_node_d[+( stringQuery | exactQuery | boolQuery | orderedQuery | nearbyQuery )];
+                    rootQuery = root_node_d[eps_p] >> +query;
+                    query = boolQuery | exactQuery | orderedQuery | nearbyQuery;
+
+                    stringQuery = leaf_node_d[ lexeme_d[+(~chset_p(operStr.c_str()))] ];
 
                     exactQuery = root_node_d[ch_p('\"')] >> exactString >> no_node_d[ch_p('\"')];
                     exactString = leaf_node_d[ lexeme_d[+(~ch_p('\"'))] ];
 
-                    stringQuery = leaf_node_d[ lexeme_d[+(~chset_p(operStr.c_str()))] ];
+                    orderedQuery = root_node_d[ch_p('[')] >> orderedString >> no_node_d[ch_p(']')];
+                    orderedString = leaf_node_d[ lexeme_d[+(~ch_p(']'))] ];
 
-                    orderedQuery = root_node_d[ch_p('[')] >> stringQuery >> no_node_d[ch_p(']')];
-                    nearbyQuery = root_node_d[ch_p('{')] >> stringQuery >> no_node_d[ch_p('}')] >> no_node_d[ch_p('^')] >> +digit_p;
+                    nearbyQuery = root_node_d[ch_p('{')] >> nearbyString >> no_node_d[ch_p('}')] >> no_node_d[ch_p('^')] >> uint_p;
+                    nearbyString = leaf_node_d[ lexeme_d[+(~ch_p('}'))] ];
                     
+                    boolQuery = (stringQuery | priorQuery) >> !( (root_node_d[ch_p(' ')] >> boolQuery) | (root_node_d[ch_p('|')] >> boolQuery) ) | notQuery;
+                    //andQuery =  root_node_d[ch_p(' ')] >> boolQuery;
+                    //orQuery = root_node_d[ch_p('|')] >> boolQuery;
+                    notQuery = root_node_d[ch_p('!')] >> stringQuery;
+
+                    priorQuery = inner_node_d[ch_p('(') >> query >> ch_p(')')];
+
                     /*
-                    boolQuery = andQuery | orQuery | notQuery;
-                    andQuery = query >> +(root_node_d[ch_p(' ')] >> query); 
+                    boolQuery = stringQuery | notQuery | andQuery | orQuery;
+                    andQuery =  boolQuery >> root_node_d[ch_p(' ')] >> boolQuery; 
                     orQuery = query >> +(root_node_d[ch_p('|')] >> query); 
                     notQuery = root_node_d[ch_p('!')] >> query;
                     */
@@ -68,7 +84,8 @@ namespace sf1v5 {
 
                 } // end - definition()
 
-                rule<ScannerT, parser_context<>, parser_tag<complexID> > query;
+                rule<ScannerT, parser_context<>, parser_tag<rootQueryID> > rootQuery;
+                rule<ScannerT, parser_context<>, parser_tag<queryID> >   query;
                 rule<ScannerT, parser_context<>, parser_tag<stringQueryID> > stringQuery;
                 rule<ScannerT, parser_context<>, parser_tag<boolQueryID> > boolQuery;
                 rule<ScannerT, parser_context<>, parser_tag<andQueryID> > andQuery;
@@ -77,11 +94,14 @@ namespace sf1v5 {
                 rule<ScannerT, parser_context<>, parser_tag<exactQueryID> > exactQuery;
                 rule<ScannerT, parser_context<>, parser_tag<exactStringID> > exactString;
                 rule<ScannerT, parser_context<>, parser_tag<orderedQueryID> > orderedQuery;
+                rule<ScannerT, parser_context<>, parser_tag<orderedStringID> > orderedString;
                 rule<ScannerT, parser_context<>, parser_tag<nearbyQueryID> > nearbyQuery;
+                rule<ScannerT, parser_context<>, parser_tag<nearbyStringID> > nearbyString;
+                rule<ScannerT, parser_context<>, parser_tag<priorQueryID> > priorQuery;
 
                 rule<ScannerT> notOper;
 
-                rule<ScannerT, parser_context<>, parser_tag<complexID> > const& start() const { return query; } // Return Start rule of rule in 
+                rule<ScannerT, parser_context<>, parser_tag<rootQueryID> > const& start() const { return rootQuery; } // Return Start rule of rule in 
             }; // end - definition
 
         private:
@@ -97,6 +117,9 @@ namespace sf1v5 {
 
             //static void initOnlyOnceCore();
             static void getQueryTree(iter_t const& i, QueryTreePtr& queryTree);
+            static void processKeywordAssignQuery( iter_t const& i, 
+                    QueryTree::QueryType queryType, QueryTreePtr& queryTree);
+            static void processBoolQuery(iter_t const& i, QueryTreePtr& queryTree);
             static void processChildTree(iter_t const& i, QueryTreePtr& queryTree);
 
 

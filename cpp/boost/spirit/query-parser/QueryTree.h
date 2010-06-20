@@ -37,6 +37,7 @@ namespace sf1v5 {
     }; // end - struct QueryTree
 
     typedef boost::shared_ptr<QueryTree> QueryTreePtr;
+    typedef std::list<QueryTreePtr>::iterator QueryTreeIter;
 
 } // end - namespace sf1v5
 
