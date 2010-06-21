@@ -2,7 +2,13 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#define BOOST_SPIRIT_DEBUG
 #include <boost/spirit/include/classic.hpp>
+
+void testCall(char const*, char const*)
+{
+    std::cout << "Test Call " << std::endl;
+}
 
 bool do_parse(const char* line, std::map<std::string, std::vector<int> >& result)
 {
@@ -13,7 +19,8 @@ bool do_parse(const char* line, std::map<std::string, std::vector<int> >& result
 
     parse_info<> info = parse(line,
             (
-             (print_p >> *print_p)[assign_a(name)]
+             (eps_p)[&testCall]
+             >> (+alnum_p)[assign_a(name)]
              >> '='
              >> int_p[push_back_a(array)]
              >> *( ch_p(',') >> int_p[push_back_a(array)])
