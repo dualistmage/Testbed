@@ -7,7 +7,8 @@
 #ifndef _QUERY_PARSER_H_
 #define _QUERY_PARSER_H_
 
-#define BOOST_SPIRIT_DEBUG 
+#define BOOST_SPIRIT_THREADSAFE
+//#define BOOST_SPIRIT_DEBUG 
 
 #include "QueryTree.h"
 
@@ -31,26 +32,17 @@ namespace sf1v5 {
             typedef tree_match<iterator_t> parse_tree_match_t;
             typedef parse_tree_match_t::tree_iterator iter_t;
 
-            static const int rootQueryID        = 100;
-            static const int stringQueryID      = 200;
-            static const int boolQueryID        = 300;
-            static const int boolRootQueryID    = 301;
-            static const int andQueryID         = 302;
-            static const int orQueryID          = 303;
-            static const int notQueryID         = 304;
-            static const int exactQueryID       = 400;
-            static const int exactStringID      = 401;
-            static const int orderedQueryID     = 500;
-            static const int orderedStringID    = 501;
-            static const int nearbyQueryID      = 600;
-            static const int nearbyStringID     = 601;
-            static const int priorQueryID       = 700;
+            static const int stringQueryID      = 100;
+            static const int boolQueryID        = 200;
+            static const int notQueryID         = 201;
+            static const int exactQueryID       = 300;
+            static const int orderedQueryID     = 400;
+            static const int nearbyQueryID      = 500;
 
             template <typename ScannerT> struct definition
             {
                 definition(const QueryParser&) // Rule definition area
                 {
-                    static const std::string operStr(" |!(){}[]^\"");
 
                     rootQuery = root_node_d[eps_p] >> +boolQuery;
 
@@ -58,7 +50,7 @@ namespace sf1v5 {
                         >> !( (root_node_d[ch_p(' ')] >> boolQuery) | (root_node_d[ch_p('|')] >> boolQuery) );
                     notQuery = root_node_d[ch_p('!')] >> (stringQuery | priorQuery);
 
-                    stringQuery = leaf_node_d[ lexeme_d[+(~chset_p(operStr.c_str()))] ];
+                    stringQuery = leaf_node_d[ lexeme_d[+(~chset_p(operStr_.c_str()))] ];
 
                     exactQuery = root_node_d[ch_p('\"')] >> exactString >> no_node_d[ch_p('\"')];
                     exactString = leaf_node_d[ lexeme_d[+(~ch_p('\"'))] ];
@@ -74,33 +66,46 @@ namespace sf1v5 {
 
                 } // end - definition()
 
-                rule<ScannerT, parser_context<>, parser_tag<rootQueryID> > rootQuery;
+                rule<ScannerT> rootQuery, priorQuery, exactString, orderedString, nearbyString;
                 rule<ScannerT, parser_context<>, parser_tag<stringQueryID> > stringQuery;
-                rule<ScannerT, parser_context<>, parser_tag<boolQueryID> > boolQuery;
-                rule<ScannerT, parser_context<>, parser_tag<andQueryID> > andQuery;
-                rule<ScannerT, parser_context<>, parser_tag<orQueryID> > orQuery;
-                rule<ScannerT, parser_context<>, parser_tag<notQueryID> > notQuery;
                 rule<ScannerT, parser_context<>, parser_tag<exactQueryID> > exactQuery;
-                rule<ScannerT, parser_context<>, parser_tag<exactStringID> > exactString;
                 rule<ScannerT, parser_context<>, parser_tag<orderedQueryID> > orderedQuery;
-                rule<ScannerT, parser_context<>, parser_tag<orderedStringID> > orderedString;
                 rule<ScannerT, parser_context<>, parser_tag<nearbyQueryID> > nearbyQuery;
-                rule<ScannerT, parser_context<>, parser_tag<nearbyStringID> > nearbyString;
-                rule<ScannerT, parser_context<>, parser_tag<priorQueryID> > priorQuery;
-
-                rule<ScannerT> notOper;
-
-                rule<ScannerT, parser_context<>, parser_tag<rootQueryID> > const& start() const { return rootQuery; } // Return Start rule of rule in 
+                rule<ScannerT, parser_context<>, parser_tag<boolQueryID> > boolQuery;
+                rule<ScannerT, parser_context<>, parser_tag<notQueryID> > notQuery;
+                rule<ScannerT> const& start() const { return rootQuery; } // Return Start rule of rule in 
             }; // end - definition
+
+        private: // private member variables
+            static std::string operStr_;
+
+            static boost::unordered_map<char, bool> openBracket_;  // <bracket char , if close bracket>
+            static boost::unordered_map<char, bool> closeBracket_;  // <bracket char , if close bracket>
 
         public: // static interface
 
-            //static void initOnlyOnce();
+            static void initOnlyOnce();
+
+            ///
+            /// @brief normalizes query string before parsing. It removes or adds space.
+            /// @details
+            ///     - Step 1 : Remove continuous space and the space before and after |.
+            ///         - (  hello   |    world  ) -> (hello|world)
+            ///     - Step 2 : Remove or add space after or behind of specific operator.
+            ///         - ( Hello World) -> (Hello World)
+            ///         - {test case } ^ 12(month case) -> {test case}^12 (month case)
+            ///         - (bracket close)(open space) -> (bracket close) (open space)
+            /// @param[queryString] source query string.
+            /// @param[normString] normalized query string.
+            /// @return true if success or false.
+            ///
+            static void normalizeQuery(const std::string& queryString, std::string& normString);
+
             static bool parseQuery( const std::string& queryString, QueryTreePtr& queryTree );
 
         private:
 
-            //static void initOnlyOnceCore();
+            static void initOnlyOnceCore();
             static void getQueryTree(iter_t const& i, QueryTreePtr& queryTree);
             static void processKeywordAssignQuery( iter_t const& i, QueryTreePtr& queryTree);
             static void processBracketQuery( iter_t const& i, QueryTree::QueryType queryType, QueryTreePtr& queryTree);

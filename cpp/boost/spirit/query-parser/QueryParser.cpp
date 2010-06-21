@@ -8,7 +8,11 @@
 
 namespace sf1v5 {
 
-    /*
+    // Declare static variables
+    std::string QueryParser::operStr_;
+    boost::unordered_map<char, bool> QueryParser::openBracket_;
+    boost::unordered_map<char, bool> QueryParser::closeBracket_;
+
     void QueryParser::initOnlyOnce()
     {
         static boost::once_flag once = BOOST_ONCE_INIT;
@@ -18,31 +22,109 @@ namespace sf1v5 {
     void QueryParser::initOnlyOnceCore()
     {
         using namespace std;
-        queryTypeMap_.insert( make_pair( andQueryID     , QueryTree::AND     ) );
-        queryTypeMap_.insert( make_pair( orQueryID      , QueryTree::OR      ) );
-        queryTypeMap_.insert( make_pair( notQueryID     , QueryTree::NOT     ) );
-        queryTypeMap_.insert( make_pair( exactQueryID   , QueryTree::EXACT   ) );
-        queryTypeMap_.insert( make_pair( orderedQueryID , QueryTree::ORDER   ) );
-        queryTypeMap_.insert( make_pair( nearbyQueryID  , QueryTree::NEARBY  ) );
+        operStr_.assign(" |!(){}[]^\"");
+
+        openBracket_.insert( make_pair('(',true) );
+        openBracket_.insert( make_pair('[',true) );
+        openBracket_.insert( make_pair('{',true) );
+        openBracket_.insert( make_pair('"',true) );
+
+        closeBracket_.insert( make_pair(')',true) );
+        closeBracket_.insert( make_pair(']',true) );
+        closeBracket_.insert( make_pair('}',true) );
+        closeBracket_.insert( make_pair('"',true) );
+
     } // end - initOnlyOnceCore()
-    */
+
+    void QueryParser::normalizeQuery(const std::string& queryString, std::string& normString)
+    {
+        initOnlyOnce();
+        std::string tmpString, tmpNormString;
+        std::string::const_iterator iter, iterEnd, prevIter;
+
+        // -----[ Step 1 : Remove continuous space and the space before and after | ]
+        iter = queryString.begin();
+        iterEnd = queryString.end();
+        while( iter != iterEnd )
+        {
+            if ( *iter == ' ' ) { 
+                // (   hello kity   ) -> ( hello kity ) 
+                // (  hello     | kity ) -> ( hello| kitty )
+                while( ++iter != iterEnd && *iter == ' ' );
+                if ( iter != iterEnd && *iter != '|')
+                    tmpString.push_back(' ');
+            }
+            else if ( *iter == '|' ) { 
+                // (Hello|  kity) -> (Hello|kity)
+                while( ++iter != iterEnd && *iter == ' ' );
+                tmpString.push_back('|');
+            } // end - else if
+            else tmpString.push_back( *iter++ );
+        } // end - while
+
+        // -----[ Step 2 : Remove or add space after or behind of specific operator ]
+        iter = tmpString.begin();
+        iterEnd = tmpString.end();
+        while(iter != iterEnd)
+        {
+            switch(*iter) {
+                case '!': case '|': case '(': case '[': case '{': case '}':
+                    // ( hello world) -> (hello world)
+                    tmpNormString.push_back( *iter++ );
+                    if ( iter != iterEnd && *iter == ' ' ) iter++; 
+                    break;
+                case ')': case ']':
+                    // (test keyword)attach -> (test keyword) attach
+                    tmpNormString.push_back( *iter++ );
+                    if ( iter != iterEnd && *iter != ' ' && *iter != '|')
+                        tmpNormString.push_back(' ');
+                    break;
+                case '^': 
+                    // Remove space between ^ and number and add space between number and open bracket.
+                    // {Test case}^ 123(case) -> {Test case}^123 (case)
+                    tmpNormString.push_back( *iter++ );
+                    if ( iter != iterEnd && *iter == ' ' ) iter++; 
+
+                    while( iter != iterEnd && isdigit(*iter) ) // Store digit
+                        tmpNormString.push_back( *iter++ );
+
+                    if ( openBracket_[*iter] ) // if first char after digit is open bracket, insert space.
+                        tmpNormString.push_back(' ');
+                    break;
+                case ' ': // (hello world ) -> (hello world)
+                    if ( ++iter != iterEnd && !closeBracket_[*iter] )
+                        tmpNormString.push_back(' ');
+                    break;
+                case '"': // Skip all things inside the exact bracket.
+                    tmpNormString.push_back('"');
+                    while( ++iter != iterEnd && *iter != '"') tmpNormString.push_back( *iter );
+                    tmpNormString.push_back( *iter++ ); // insert last "
+                    break;
+                default: // Store char && add space if openBracket is attached to the back of closeBracket.
+                    //prevIter = iter;
+                    tmpNormString.push_back( *iter++ );
+                    if ( (iter != iterEnd) && (openBracket_[*iter] || *iter == '!') )
+                        tmpNormString.push_back(' ');
+            } // end - switch()
+        } // end - while
+
+        normString.swap( tmpNormString );
+
+    } // end - normalizeQuery()
 
     bool QueryParser::parseQuery( const std::string& queryString, QueryTreePtr& queryTree )
     {
+        std::string normQueryString;
+        normalizeQuery(queryString, normQueryString);
         QueryParser qGrammar;
-        tree_parse_info<> info = ast_parse(queryString.c_str(), qGrammar);
+        tree_parse_info<> info = ast_parse(normQueryString.c_str(), qGrammar);
         if ( info.full )
             getQueryTree(info.trees.begin(), queryTree);
-
         return info.full;
     } // end - parseQuery()
 
     void QueryParser::getQueryTree(iter_t const& i, QueryTreePtr& queryTree)
     {
-        std::cout << "------------------------[ i->value : " 
-            << std::string(i->value.begin(), i->value.end()) 
-            << " (child size : " << i->children.size() << ")" << std::endl;
-
         if ( i->value.id() == stringQueryID )
             processKeywordAssignQuery(i, queryTree);
         else if  (i->value.id() == exactQueryID )
@@ -72,7 +154,7 @@ namespace sf1v5 {
     {
         QueryTreePtr tmpQueryTree(new QueryTree(queryType));
 
-        // Extract String
+        // Store String value of first child into keyword_
         iter_t childIter = i->children.begin();
         std::string tmpString( childIter->value.begin(), childIter->value.end() );
         tmpQueryTree->keyword_.swap( tmpString );
@@ -114,16 +196,12 @@ namespace sf1v5 {
         if ( (*first)->type_ == queryType )
         { 
             // use first child tree as a root tree.
-            if ( (*second)->type_ == queryType )
-            {
+            if ( (*second)->type_ == queryType ) 
                 // Move all children in second node into first ( Insert : first->end )
                 (*first)->children_.splice( (*first)->children_.end(), (*second)->children_ );
-            } // end - if
-            else
-            {
+            else 
                 // Move second node into children in first ( Insert : first->end )
                 (*first)->children_.push_back( *second );
-            } // end - else
 
             tmpQueryTree.swap( *first );
         }

@@ -1,0 +1,16 @@
+( Hello    Kitty   Thanks   )
+(Hello Kitty Thanks)
+(   !  Not |  Allowed and) | {    Test     nearby }    ^ 121
+(!Not|Allowed and)|{Test nearby}^121
+{Test case}^ 123(case sensitive)
+{Test case}^123 (case sensitive)
+가나다(하나|둘 셋)
+가나다 (하나|둘 셋)
+(하나|둘 셋)가나다
+(하나|둘 셋) 가나다
+[하나|둘 셋]가나다
+[하나|둘 셋] 가나다
+[하나|둘 셋]|가나다
+[하나|둘 셋]|가나다
+(하나둘(셋|넷 다섯 (여섯!일곱) 여덟)아홉)|열
+(하나둘 (셋|넷 다섯 (여섯 !일곱) 여덟) 아홉)|열
