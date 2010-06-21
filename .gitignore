@@ -3,5 +3,6 @@
 *.swo
 *.jar
 *.class
+main
 ./main.cpp
 ./makefile
