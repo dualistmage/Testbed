@@ -1,3 +1,9 @@
+///
+/// @brief Simple test code of boost::spirit
+/// @author Dohyun Yun ( dualistmage@gmail.com )
+/// @date 2010.06.21
+///
+
 #include <iostream>
 #include <fstream>
 #include <vector>
