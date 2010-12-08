@@ -15,8 +15,9 @@ int main(int argc, char* argv[])
 
         typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
         const string WORD_DELIMITER_STRING = " `~!@#$%^&*()_-+={}[]\\|\"':;?/>.<,\n\r";
-        boost::char_separator<char> sep( WORD_DELIMITER_STRING.c_str() );
-        tokenizer tokens( inputStr, sep );
+        //boost::char_separator<char> sep( WORD_DELIMITER_STRING.c_str() );
+        //tokenizer tokens( inputStr, sep );
+        tokenizer tokens( inputStr, boost::char_separator<char> ( WORD_DELIMITER_STRING.c_str() ) );
         cout << "Input : \"" << inputStr << "\"" << endl;
         cout << "------------------------------------------------------------------------" << endl;
         for(tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); tok_iter++)
