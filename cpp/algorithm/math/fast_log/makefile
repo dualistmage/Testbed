@@ -23,9 +23,7 @@ LIB_FLAGS = $(LIB_PATH) $(LIB)
 LIB_PATH = \
 		   -L $(BOOST_ROOT)/lib \
 
-LIB = 
-
-	  #\
+LIB = \
 	  -l boost_system-gcc41-mt \
 	  -l boost_serialization-gcc41-mt \
 	  -l boost_thread-gcc41-mt \

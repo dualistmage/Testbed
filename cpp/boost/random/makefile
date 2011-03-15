@@ -7,7 +7,7 @@ ifneq ($(COMPILE_FLAGS),)
 CXXFLAGS += $(COMPILE_FLAGS) 
 else
 #CXXFLAGS = -Wall -O3 -g
-CXXFLAGS = -Wall -O3 -g -DTEST=10000
+CXXFLAGS = -Wall -O3 -g
 endif
 
 
@@ -23,9 +23,7 @@ LIB_FLAGS = $(LIB_PATH) $(LIB)
 LIB_PATH = \
 		   -L $(BOOST_ROOT)/lib \
 
-LIB = 
-
-	  #\
+LIB = \
 	  -l boost_system-gcc41-mt \
 	  -l boost_serialization-gcc41-mt \
 	  -l boost_thread-gcc41-mt \
@@ -40,7 +38,6 @@ all: $(TARGET)
 
 $(TARGET) : $(OBJECTS)
 	$(CXX) -o $@ $^ $(LIB_FLAGS)
-	echo $(CURDIR)
 
 clean:
 	rm -rf *.o $(TARGET) 

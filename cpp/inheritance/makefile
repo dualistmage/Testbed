@@ -23,7 +23,7 @@ LIB_PATH = \
 
 LIB = \
 
-%.o : %.cpp
+%.o : %.cpp %.h
 	$(CXX) $(INCLUDE_PATH) $(CXXFLAGS) -c -o $@ $^ 
 
 all: $(TARGET)
