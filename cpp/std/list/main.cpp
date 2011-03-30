@@ -5,11 +5,21 @@
 
 #include <iostream>
 #include <list>
+#include <map>
 
 using namespace std;
 
 int main()
 {
+    { // Test return value of size() and back()
+        map< unsigned int , list<int> > a;
+        list<int>& test(a[13]), &test2(a[15]);
+        test2.push_back(3);
+        printf("size() value when list a is empty : %u:%u\n", test.size(), a[13].size());
+        printf("addr   value when list a is empty : %x:%x\n", &(a[13]), &test);
+        printf("size() value when list a is empty : %u:%u\n", test2.size(),a[15].size());
+        printf("addr   value when list a is empty : %x:%x\n", &(a[15]), &test2);
+    }
     { // Test splice
         list<int> a, b, c;
         a.push_back(1);
