@@ -1,0 +1,10 @@
+[18] We further show that instead of using an off-the-shelf summarization technique that is designed for pure-text summarization, it is possible to design specialized summarization methods catering to Web-page structures.
+[17] In this paper, we show that using Web-page summarization techniques for preprocessing in Web-page classification is a viable and effective technique.
+[59] To summarize, our aim is to apply Web-page summarization to Web-page classification, rather than using pure-text summarization for the purpose.
+[21] In addition, in this paper, we also propose a new automatic Web summarization algorithm, which extracts the main topic of a Web page by a page-layout analysis to enhance the accuracy of classification.
+[6] Experimental results show that our proposed summarization-based classification algorithm achieves an approximately 8.8% improvement as compared to pure-text-based classification algorithm.
+[97] In order to make use of these objects, from the above types of objects, we define the Content Body (CB) of a Web page which consists of the main objects related to the topic of that page; these are the objects that convey important information about the page.
+[257] In this paper, several Web-page summarization algorithms are proposed for extracting the most relevant features from Web pages for improving the accuracy of Web classification.
+[131] Firstly, we test the Web page classification on the human created summaries in order to find out whether the summarization can help classification of Web pages at all.
+[2] Web-page classification is much more difficult than pure-text classification due to a large variety of noisy information embedded in Web pages.
+[32] Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page.

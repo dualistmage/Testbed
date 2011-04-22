@@ -1,0 +1,630 @@
+///
+/// @file   t_ThreadQuerySender.cpp
+/// @brief  This program is used for query stress test. 
+///         Each thread will work as one USER to search something during given time.
+/// @author Dohyun Yun
+/// @date   2009-11-27
+/// @details
+/// - Log
+///     - 2009.12.03 Modified the way of thread query processing.
+///         - Previous way : After one thread gets the query result, it will go to thread pool.
+///         - New way : Threads are continuously send query until timeout.
+/// 
+
+
+//#include <HeaderPacket.h>
+
+#include <wiselib/thread-pool/ThreadObjectPool.h>
+
+#include <boost/date_time/local_time/local_time.hpp>
+#include <boost/tr1/random.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
+#include <boost/asio.hpp>
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
+using namespace std;
+using boost::asio::ip::tcp;
+
+
+///
+/// @brief A class which is the unit thread of query sending module.
+///
+class QueryThread : public wiselib::thread_pool::ThreadObject
+{
+
+    public:
+        /// 
+        /// @brief Generates query XML string with given collectionName and queryString.
+        /// @details
+        ///     - Modify the xml code directly inside the makeQueryXML if you want to use different option in the query.
+        /// @param collectionName   Collection name which the query is searched.
+        /// @param queryString      Query String which is used for searching.
+        /// @param queryXML         Query xml string which is the result of this function.
+        /// 
+        static void makeQueryXML(
+                const std::string& collectionName, 
+                const std::string& queryString, 
+                std::string& queryXML
+                );
+
+        ///
+        /// @brief Sends query and get the result.
+        /// @param queryXML         Query XML to get the result.
+        /// @param ipAddress        IP address which is used while sending query.
+        /// @param portNo           Port Number which is used while sending query.
+        /// @param resultMessage    Result string which is the output of this function.
+        /// @return true            Success to sending query and getting result. 
+        /// @return false           Fail to sending query and getting result. 
+        ///
+        static bool requestQuery(
+                const std::string& queryXML,
+                const std::string& ipAddress,
+                const std::string& portNo,
+                std::string& resultMessage
+                );
+
+        ///
+        /// @brief Loads query file from the given path string.
+        /// @param queryFilePath    File path of query group.
+        /// @return true            Success to load query file.
+        /// @return false           Fail to load query file.
+        ///
+        static bool loadQueryFile( const std::string& queryFilePath );
+
+        ///
+        /// @brief Generates thread pool of Query Thread.
+        /// @param threadNo The number of query threads.
+        /// @return true    Success to generate of thread pool.
+        /// @return false   Fail to generate of thread pool.
+        ///
+        static bool generateThreadPool( int threadNo );
+
+        ///
+        /// @brief Starts to multi thread based Query Process.
+        ///
+        static bool doQueryProcess();
+
+        ///
+        /// @brief Records report result to the given string object.
+        /// @param reportString Target string object which will be used to store result information.
+        /// @return true        Success to store report to string object.
+        /// @return false       Fail to store report to string object.
+        ///
+        static bool reportInfoToString( std::string& reportString );
+
+        ///
+        /// @brief Gets random query from the list.
+        /// @param randomQuery  Target string object which will contain one query.
+        /// @return true        Success to get random query.
+        /// @return false       Fail to get random query.
+        ///
+        static bool selectRandomQueryFromQueryList( std::string& randomQuery );
+
+    private:
+
+        ///
+        /// @brief This function is the thread function which is automatically started when thread wakes up.
+        /// @details
+        ///     - Description of the work.
+        ///         -# Make Query XML with given query.
+        ///         -# Send query and get the result.
+        ///         -# Enable thread lock and do following works.
+        ///             - Increase the number of completely processed query.
+        ///             - If the condition is finished, awake the condition variable which is waiting at the end of the main.
+        ///
+        void start(void);
+
+        /// 
+        /// @brief This function is used to check whether the current status satisfy the specific condition.
+        /// @return true    Satisfies the end condition.
+        /// @return false   Doesn't satisfies the end condition.
+        ///
+        bool satisfyEndCondition();
+
+    public:
+        ///
+        /// @brief IP address String
+        ///
+        static std::string ipAddress_;
+
+        ///
+        /// @brief Port number of sf1 host 
+        ///
+        static std::string portNo_;
+
+        ///
+        /// @brief The number of query which completely gets the result.
+        ///
+        static int numOfDone_;
+
+        ///
+        /// @brief This variable stores duration of query process(Seconds).
+        ///
+        static int duration_;
+
+        ///
+        /// @brief This mutex variable is used for every query process is finished.
+        ///
+        static boost::mutex doneMutex_;
+
+        ///
+        /// @brief Contains a name of target collection.
+        ///
+        static std::string collectionName_;
+
+        ///
+        /// @brief Contains query string list from file.
+        ///
+        static std::vector<std::string> queryStringList_;
+
+        ///
+        /// @brief Contains begining time of query process.
+        ///
+        static boost::posix_time::ptime queryProcessBeginTime_;
+
+        ///
+        /// @brief Contains end time of query process.
+        ///
+        static boost::posix_time::ptime queryProcessEndTime_;
+
+        ///
+        /// @brief Contains its own query string.
+        ////
+        std::string queryString_;
+
+        ///
+        /// @brief Defines thread number.
+        ///
+        static int threadNo_;
+
+        ///
+        /// @brief timeout condition
+        /// 
+        static boost::condition timeoutCondition_;
+
+        ///
+        /// @brief id number which represents the User. It starts from 0.
+        ///
+        int id_;
+
+        ///
+        /// @brief Represents how many queries are sent by eachthread. 
+        ///
+        static std::vector<size_t> threadQueryNo_;
+
+    private:
+
+        ///
+        /// @brief Thread pool object.
+        ///
+        static wiselib::thread_pool::ThreadObjectPool queryThreadPool_;
+
+}; // end - class QueryThread
+
+
+// Static variables
+std::string                 QueryThread::ipAddress_  = "localhost";
+std::string                 QueryThread::portNo_     = "12121" ;
+int                         QueryThread::numOfDone_  = 0;
+int                         QueryThread::duration_   = 0;
+int                         QueryThread::threadNo_   = 0;
+boost::mutex                QueryThread::doneMutex_;
+std::string                 QueryThread::collectionName_;
+std::vector<size_t>         QueryThread::threadQueryNo_;
+std::vector<std::string>    QueryThread::queryStringList_;
+boost::condition            QueryThread::timeoutCondition_;
+boost::posix_time::ptime    QueryThread::queryProcessBeginTime_;
+boost::posix_time::ptime    QueryThread::queryProcessEndTime_;
+wiselib::thread_pool::ThreadObjectPool QueryThread::queryThreadPool_;
+
+
+// Main
+///////////////////////////////////////////////////////////////////////////////
+
+int main( int argc, char* argv[] )
+{
+    // ---------------------------- [ Checking parameters and initialization
+    if ( argc != 7 )
+    {
+        cerr << "<Usage>" << endl;
+        cerr << "\t./t_ThreadQuerySender <IPAddress> <PortNo> <ThreadNo> <collectionName> <queryFile> <QueryingTime(Sec)>" << endl;
+        return -1;
+    } // end - if
+
+    // Check the input value once more.
+    cout << "Check the information" << endl
+        << "-----------------------------------------" << endl
+        << "IPAddress       : " << argv[1] << endl
+        << "PortNo          : " << argv[2] << endl
+        << "ThreadNo        : " << argv[3] << endl
+        << "CollectionName  : " << argv[4] << endl
+        << "QueryFilePath   : " << argv[5] << endl
+        << "Querying Time   : " << argv[6] << endl
+        << "Is that right(y/n)? "; 
+    std::string answer;
+    cin >> answer;
+    if (answer != "y" && answer != "Y")
+    {
+        cout << "Exit Program" << endl;
+        return -1;
+    }
+
+    QueryThread::ipAddress_      = argv[1];
+    QueryThread::portNo_         = argv[2];
+    QueryThread::threadNo_       = atoi(argv[3]);
+    QueryThread::collectionName_ = argv[4];
+
+    // Setup the thread No;
+    for(int i = 0; i < QueryThread::threadNo_; i++)
+    {
+        QueryThread::threadQueryNo_.push_back(0);
+    } // end - for
+
+    // Query File loading
+    QueryThread::loadQueryFile( argv[5] );
+
+    // Time setting
+    QueryThread::duration_ = atoi(argv[6]);
+
+    // Thread Pool generation
+    QueryThread::generateThreadPool( QueryThread::threadNo_ );
+
+    QueryThread::doQueryProcess();
+    
+    std::string report;
+    QueryThread::reportInfoToString( report );
+
+    cout << report << endl;
+
+} // end - main()
+
+bool QueryThread::loadQueryFile( const std::string& queryFileName )
+{
+    ifstream fpin( queryFileName.c_str() );
+    if ( !fpin.is_open() )
+    {
+        cerr << "Error : File(" << queryFileName << ") is not opened." << endl;
+        return false;
+    }
+
+    while( fpin.good() )
+    {
+        std::string query;
+        getline( fpin , query );
+        if ( !query.empty() )
+            queryStringList_.push_back( query );
+    } // end - while
+
+    return true;
+} // end - loadQueryFile()
+
+bool QueryThread::generateThreadPool( int threadNo )
+{
+    for(int i = 0; i < threadNo; i++)
+    {
+        wiselib::thread_pool::ThreadObject* threadObject = NULL;
+        threadObject = new QueryThread();
+        if (threadObject == NULL)
+        {
+            cerr << "Thread creation failed" << endl;
+            return false;
+        } // end - if
+        threadObject->createThread( true );
+        threadObject->setThreadObjectPool( &queryThreadPool_ );
+        queryThreadPool_.add( 
+                static_cast<wiselib::thread_pool::ThreadObject*>(threadObject) );
+    }
+    return true;
+} // end - generateThreadPool()
+
+bool QueryThread::doQueryProcess()
+{
+    // Initialize Time variable
+    boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
+    QueryThread::queryProcessBeginTime_ = now;
+    // Log : 2009.12.03
+    // boost::posix_time::ptime end = 
+    QueryThread::queryProcessEndTime_ = 
+        QueryThread::queryProcessBeginTime_+ boost::posix_time::seconds( QueryThread::duration_ );
+
+    
+
+    // Initialize Thread variable
+    QueryThread* thread = NULL;
+    wiselib::thread_pool::ThreadObject* threadObjectPtr = NULL;
+
+    /*********************************************************************
+     * Log : 2009.12.03
+     *********************************************************************
+
+    int ret;
+    int threadWaitingTime(100); // micro second.
+
+    // Random variable to select a query from query list ramdomly.
+    boost::mt19937 randomMethod;
+    boost::uniform_int<> queryRange(0, QueryThread::queryStringList_.size() - 1);
+    boost::variate_generator< boost::mt19937, boost::uniform_int<> > 
+        queryRandomNo( randomMethod, queryRange );
+    
+    while( now < end )
+    {
+        // Get one thread from thread pool
+        ret = QueryThread::queryThreadPool_.get( threadObjectPtr );
+        if ( ret == false )
+        {
+            std::cerr << "[Warning] There's no idel thread in thread pool. wait until getting idle thread" << endl;
+            while( ret == false )
+            {
+                //usleep( threadWaitingTime );
+                usleep( threadWaitingTime );
+                ret = QueryThread::queryThreadPool_.get( threadObjectPtr );
+            } // end - while
+            std::cerr << "Get thread!!!!!!!!!!!!!!!" << endl;
+        } // end - if
+
+        thread = static_cast<QueryThread*>( threadObjectPtr );
+        thread->queryString_ = QueryThread::queryStringList_[ queryRandomNo() ];
+        thread->run();
+
+        now = boost::posix_time::microsec_clock::local_time();
+    } // end - while
+    *********************************************************************/
+
+
+    cout << "Thread ID : "; 
+    for(int no = 0; no < QueryThread::threadNo_; no++ )
+        cout << setw(5) << no << " |";
+    cout << endl;
+
+    
+    int id = 0;
+    while( QueryThread::queryThreadPool_.get(threadObjectPtr) )
+    {
+        thread = static_cast<QueryThread*>(threadObjectPtr);
+        thread->id_ = id++;
+        thread->run();
+    }
+    // ------------------------------------------------------------------
+
+    { // Wait until timeout
+        boost::mutex::scoped_lock lock( QueryThread::doneMutex_ );
+        QueryThread::timeoutCondition_.wait(lock);
+    }
+
+    // Reset the real end time.
+    // Log : 2009.12.03
+    // QueryThread::queryProcessEndTime_ = now;
+    QueryThread::queryProcessEndTime_ = boost::posix_time::microsec_clock::local_time();
+
+    QueryThread::queryThreadPool_.shutdownAllThread();
+
+    return true;
+
+} // end - doQueryProcess()
+
+void QueryThread::makeQueryXML(
+        const std::string& collectionName, 
+        const std::string& queryString, 
+        std::string& queryXML
+        )
+{
+    queryXML  = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
+    queryXML += "<SFQuery version=\"5.0.0\" request_type=\"KEYWORD_SEARCH_TYPE\">\n";
+    queryXML += "<Common encoding=\"UTF-8\">\n";
+    queryXML += "    <Query log=\"Y\"><![CDATA[";
+    queryXML += queryString;
+    queryXML += "]]></Query>\n";
+    queryXML += "    <SessionString>Thread query sender : Finsternis</SessionString>\n";
+    queryXML += "</Common>\n";
+    queryXML += "<Collection name=\"";
+    queryXML += collectionName;
+    queryXML += "\" aliasname=\"economy\">\n";
+    queryXML += "    <RankingModel>PLM</RankingModel>\n";
+    queryXML += "    <PageInfo>0,20</PageInfo>\n";
+    queryXML += "    <LanguageAnalyzer applyLA=\"Y\" synonymExtension=\"Y\">korean</LanguageAnalyzer>\n";
+    queryXML += "    <Search>\n";
+    queryXML += "        <Field>Title</Field>\n";
+    queryXML += "        <Field>Content</Field>\n";
+    queryXML += "    </Search>\n";
+    queryXML += "    <Result removeDuplicatedDocs=\"N\">\n";
+    queryXML += "        <Field highlight=\"Y\">Title</Field>\n";
+    queryXML += "        <Field highlight=\"Y\" snippet=\"Y\" summary=\"Y\" summarySentenceNum=\"3\">Content</Field>\n";
+    queryXML += "    </Result>\n";
+    queryXML += "<SortingPriority>\n <Field order=\"DESC\">RANK_</Field>\n </SortingPriority>\n";
+    queryXML += "</Collection>\n";
+    queryXML += "</SFQuery>\n";
+} // end - makeQueryXML()
+
+
+bool QueryThread::requestQuery(
+        const std::string& queryXML,
+        const std::string& ipAddress,
+        const std::string& portNo,
+        std::string& resultMessage
+        )
+{
+    try
+    {
+        // ---------------------------- [ Socket Comm variable
+        boost::asio::io_service io_service;
+        tcp::resolver resolver(io_service);
+        tcp::resolver::query query( ipAddress , portNo.c_str() );
+        tcp::resolver::iterator iterator = resolver.resolve(query);
+        boost::shared_ptr<boost::asio::ip::tcp::socket> socket(new tcp::socket(io_service));
+        boost::thread t(boost::bind(&boost::asio::io_service::run, &io_service));
+        tcp::endpoint endpoint = *iterator;
+        boost::system::error_code ec;
+
+        // if connection is failed.
+        if (socket->connect(endpoint , ec))
+        {
+            cout << "[ INFO ] Connection Failed" << endl << endl;
+            return false;
+        } // end - if
+
+        // ---------------------------- [ send query
+        unsigned int queryType = 0;
+        unsigned int dataPacketSize = 0;
+
+        //HeaderPacket headerPacket;
+        queryType = 5; // KEYWORDSEARCH
+        dataPacketSize = queryXML.size();
+
+        // Host to Network order
+        queryType = htonl( queryType );
+        dataPacketSize = htonl( dataPacketSize );
+
+        // Header - queryType
+        boost::asio::write( *socket,
+                boost::asio::buffer(reinterpret_cast<char*>(&queryType), sizeof(unsigned int)));
+        // Header - dataPacketSize
+        boost::asio::write( *socket,
+                boost::asio::buffer(reinterpret_cast<char*>(&dataPacketSize), sizeof(unsigned int)));
+
+        // Data
+        boost::asio::write( *socket, boost::asio::buffer( queryXML.c_str(),
+                    dataPacketSize));
+
+        // ---------------------------- [ receive query result.
+        // Header - queryType
+        boost::asio::read( *socket, boost::asio::buffer(reinterpret_cast<char*>(&queryType),
+                    sizeof(unsigned int) ) );
+        // Header - dataPacketSize
+        boost::asio::read( *socket, boost::asio::buffer(reinterpret_cast<char*>(&dataPacketSize),
+                    sizeof(unsigned int) ) );
+
+        // Network to Host order
+        queryType = ntohl( queryType );
+        dataPacketSize = ntohl( dataPacketSize );
+
+        //cout << QueryThread::numOfDone_ << "] Result Size : " << headerPacket.dataPacketSize_ << endl;
+
+        size_t resultLength = dataPacketSize;
+        char* getData = new char[ resultLength + 1 ];
+        boost::asio::read( *socket, boost::asio::buffer(getData, resultLength ));
+        getData[ resultLength ] = '\0';
+
+
+        for(unsigned int k = 0; k < resultLength; k++)
+        {
+            if (getData[k] == 0)
+                resultMessage += " ";
+            else
+                resultMessage += getData[k];
+        } // end - for
+
+        if( getData )
+        {
+            delete [] getData;
+            getData = NULL;
+        }
+
+        socket->close();
+        t.join();
+
+    } // end - try
+
+    catch (std::exception& e)
+    {
+    //    std::cerr << "Exception: " << e.what() << std::endl;
+    }
+    catch (...)
+    {
+        std::cerr << "Missing exception Occurs ---[ : ";
+    }
+
+    return true;
+} // end - requestQuery()
+
+void QueryThread::start(void)
+{
+    std::string queryXML, resultXML;
+    boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
+
+    while( now < queryProcessEndTime_ )
+    {
+        // choose random query
+        selectRandomQueryFromQueryList( queryString_ );
+
+        makeQueryXML(collectionName_, queryString_ , queryXML);
+        requestQuery(queryXML, ipAddress_, portNo_, resultXML);
+        if ( resultXML.size() > 209 )
+            QueryThread::threadQueryNo_[ id_ ]++;
+
+
+        boost::mutex::scoped_lock lock( QueryThread::doneMutex_ );
+        // if ( QueryThread::numOfDone_ % 10 == 0)
+        // {
+        //     stringstream ss;
+        //     ss << "\r";
+        //     ss << "Query Done: ";
+        //     for(std::vector<size_t>::iterator iter = QueryThread::threadQueryNo_.begin();
+        //             iter != QueryThread::threadQueryNo_.end(); iter++)
+        //         ss << setw(5) << *iter << " |";
+        //     ss << std::flush;
+        //     cout << ss.str();
+        // }
+        if ( QueryThread::numOfDone_ % 100  == 0 )
+            cerr << "Query Done : " << QueryThread::numOfDone_ << endl;
+        QueryThread::numOfDone_++;
+
+        // // XXX - debug start
+        // stringstream ss;
+        // ss << endl << "[INFO] Complete Query No : " << QueryThread::numOfDone_ << endl;
+        // ss << "[INFO] Thread id : " << boost::this_thread::get_id() << endl;
+        // ss << "Query & Result" << endl;
+        // ss << "-------------------------------------- start : " << QueryThread::numOfDone_ << endl;
+        // ss << queryXML << endl;
+        // ss << "-------------------------------------- mid : " << QueryThread::numOfDone_ << endl;
+        // ss << resultXML << endl;
+        // ss << "-------------------------------------- end : " << QueryThread::numOfDone_ << endl;
+        // cerr << ss.str();
+        // // XXX - debug end 
+
+
+        now = boost::posix_time::microsec_clock::local_time();
+    } // end - while( now < queryProcessEndTime_ )
+
+    boost::mutex::scoped_lock lock( QueryThread::doneMutex_ );
+    QueryThread::timeoutCondition_.notify_one();
+
+
+} // end - start()
+
+bool QueryThread::reportInfoToString(std::string& reportString)
+{
+    using namespace boost::posix_time;
+
+    // Calculate duration
+    time_duration td = QueryThread::queryProcessEndTime_ - QueryThread::queryProcessBeginTime_;
+
+    stringstream ss;
+    ss << endl;
+    ss << "Query Process Report - t_ThreadQuerySender" << endl;
+    ss << "------------------------------------------" << endl;
+    ss << "Begin        : " << to_simple_string( QueryThread::queryProcessBeginTime_ ) << endl;
+    ss << "End          : " << to_simple_string( QueryThread::queryProcessEndTime_ ) << endl;
+    ss << "Duration (s) : " << td.total_seconds() << endl;
+    ss << "Query no     : " << QueryThread::numOfDone_ << endl;
+    ss << "TPS          : " << static_cast<float>(
+            static_cast<float>(QueryThread::numOfDone_) / static_cast<float>(td.total_seconds()) ) << endl;
+    ss << "------------------------------------------" << endl;
+
+    reportString = ss.str();
+    return true;
+
+} // end - reportInfoToString()
+
+bool QueryThread::selectRandomQueryFromQueryList( std::string& randomQuery )
+{
+    boost::mt19937 randomMethod;
+    boost::uniform_int<> queryRange(0, QueryThread::queryStringList_.size() - 1);
+    static boost::variate_generator< boost::mt19937, boost::uniform_int<> > 
+        queryRandomNo( randomMethod, queryRange );
+    randomQuery = QueryThread::queryStringList_[ queryRandomNo() ];
+    return true;
+} // end - selectRandomQueryFromQueryList()

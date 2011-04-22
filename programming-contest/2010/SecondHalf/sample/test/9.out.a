@@ -1,0 +1,10 @@
+[1] We describe a new practical algorithm for finding perfect hash functions with no specification space at all, suitable for key sets ranging in size from small to very large.
+[16] The algorithm produces perfect hash functions that require no specification space at all; however, functions produced are only perfect; not minimal and not order preserving.
+[3] The perfect hash functions produced are optimal in terms of time (perfect) and require at most computation of h1 (k) and h2 (k); two simple auxiliary pseudorandom functions.
+[151] ing perfect hash functions with no specification space at all, suitable for key sets ranging in size from small to very large.
+[20] The algorithm produces perfect hash functions with much higher success rates than the acyclic hypergraph approach [8] and mostly from the first trial.
+[67] In this section, we introduce a new algorithm to generate perfect hash functions that require no specification space at all and has a high success rate.
+[32] The WebGraph research group [1] used order preserving perfect hashing [8] to access URL sets as large as 18.5 million URLs and the perfect hash function specifications required 88 MB.
+[2] The method is able to find perfect hash functions for various sizes of key sets in linear time.
+[34] A less extensive literature has grown up, mostly during the last decade, dealing with perfect hash functions; it is that subarea that we consider in this section.
+[30] Efficient perfect hash functions have been successfully used to manage very large web graphs.

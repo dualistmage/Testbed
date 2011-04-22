@@ -1,0 +1,10 @@
+[54] Thus in Dirichlet PageRank, a surfer would more likely follow the out-links of the current page if the page has many out-links, assuming that it is a potential good hub page.
+[12] A page with more out-links is more likely to be a good hub page than a page with fewer ones, thus we assign a lower  to this page.
+[2] In order to avoid the rank sink problem, PageRank assumes that a surfer, being in a page, jumps to a random page with a certain probability.
+[25] The intuition is that a web surfer will follow the out-links of the current page with probability 1 -  and will jump to a random page with probability .
+[14] In the surfer model, we would like to estimate the probability that a surfer will visit a page in the next step, either through the out-links of the current page or randomly jumping.
+[5] In this poster, we propose a novel algorithm "Dirichlet PageRank" to address this problem by adapting flexible jumping probabilities based on the number of out-links in a page.
+[11] Unlike the language model smoothing problem, a web page length does not carry much information in the PageRank matrix, thus we would rather consider the number of out-links of a page.
+[56] In this section, we compare the proposed Dirichlet PageRank algorithm with the standard PageRank as well as the text-only baseline.
+[4] This is not the case in the real world, since presumably a surfer would more likely follow the out-links of a high-quality hub page than follow the links of a low-quality one.
+[3] In the standard PageRank algorithm, the jumping probabilities are assumed to be the same for all the pages, regardless of the page properties.

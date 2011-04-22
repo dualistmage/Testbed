@@ -1,0 +1,10 @@
+[129] A potential advantage of replacing a simple page-content hash function with a text classifier is an increased likelihood that a linked page will be mapped to the same node as its linking page.
+[5] The approach is compared experimentally with a hash-based partitioning, in which crawler assignments are determined by hash functions computed over URLs and page contents.
+[44] Each local crawler operates independently unless it encounters a boundary page, a page not associated with its assigned category.
+[17] A distributed crawler may be structured as a group of n local crawlers, with a single local crawler running on each node of an n-node distributed system.
+[4] We examine design alternatives for a topic-oriented distributed crawler, including the creation of a Web page classifier for use in this context.
+[3] We propose a topic-oriented approach, in which the Web is partitioned into general subject areas with a crawler assigned to each.
+[97] Similarly, each local crawler computes a hash function over the contents of each page that it downloads.
+[234] To permit a direct comparison with hash-based collaboration, we redistributed the pages into 16 different subcollections using a page-content hash function and computed the pagerank ordering of each.
+[188] For topic-oriented crawling a more important statistic is the topic locality, which we measure by the proportion of linked pages that are classified into the same category as their linking page.
+[122] In this section we outline the design of a topic-oriented collaborative crawler that uses a text classifier to assign pages to nodes.
