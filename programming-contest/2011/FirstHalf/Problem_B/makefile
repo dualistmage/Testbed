@@ -2,22 +2,21 @@ CC = g++
 RM = rm -f
 
 INCLUDE_DIRS = -I.
-CC_FLAGS = -O3
-#CC_FLAGS = -c -Wall -ansi -g
+CC_FLAGS = -c -Wall -ansi -g
+#CC_FLAGS = -O1
 
-EXE_OUT = Problem_B
-OBJ = $(patsubst %.cpp, %.o, $(wildcard ./utility/*.cpp \
-	  									*.cpp) )
+EXE_OUT1 = Problem_B
+OBJ1 = $(EXE_OUT1).o
 
-all:$(EXE_OUT)
+all:$(EXE_OUT1)
 
-$(EXE_OUT): $(OBJ)
-	$(CC) -o $(EXE_OUT) $^
+$(EXE_OUT1): $(OBJ1)
+	$(CC) -o $(EXE_OUT1) $^
 
 %.o: %.cpp
 	$(CC) $(CC_FLAGS) $(INCLUDE_DIRS) -c -o $@ $?
 
 clean:
 	$(RM) *.o \
-		$(OBJ) \
-		$(EXE_OUT)
+		$(OBJ1) \
+		$(EXE_OUT1)

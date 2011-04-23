@@ -17,35 +17,39 @@ using namespace std;
 class RatingUnit
 {
 public:
-    RatingUnit(int uid, int mid, float r) : userid_(uid), movieid_(mid), rating_(r) {};
+    RatingUnit(int uid, int mid, double r) : userid_(uid), movieid_(mid), rating_(r) {};
     int userid_;
     int movieid_;
-    float rating_;
+    double rating_;
 }; // class RatingUnit
 
 class ItemSimilarity
 {
 public:
-    ItemSimilarity(int mid, float sim) : movieid_(mid), sim_(sim) {};
-    bool operator< (const ItemSimilarity& rhs) const { return this->sim_ < rhs.sim_; }
+    ItemSimilarity(int mid, double sim) : movieid_(mid), sim_(sim) {};
+    bool operator< (const ItemSimilarity& rhs) const { 
+        if ( fabs(this->sim_-rhs.sim_) < 0.0000001f )
+            return this->movieid_ > rhs.movieid_;
+        return this->sim_ < rhs.sim_; 
+    }
     int movieid_;
-    float sim_;
+    double sim_;
 }; // class RatingUnit
 
 // ------------------------------------------------------------------ [ Global variables ]
 int K = 30;
 int maxUser, maxMovie;
-float** uiMat; // [userid][movieid]
-float* userCount;
-float* movieCount;
+double** uiMat; // [userid][movieid]
+double* userCount;
+double* movieCount;
 set<int> userList;
 set<int> movieList;
 
 priority_queue<ItemSimilarity>* neighborList; // [movieid] // top K 
 
 // ------------------------------------------------------------------ [ Function Definition ]
-float getAdjustSimilarity(int movie1, int movie2); // movie1 must be smaller than movie2
-float predictRating(int user, int movie, priority_queue<ItemSimilarity>* simMovieList);
+double getAdjustSimilarity(int movie1, int movie2); // movie1 must be smaller than movie2
+double predictRating(int user, int movie, priority_queue<ItemSimilarity>* simMovieList);
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -106,20 +110,20 @@ int main(int argc, char* argv[])
     set<int>::iterator userIter, movieIter, movieIter2;
 
     // Allocate ui matrix
-    uiMat = new float*[maxUser + 1]; // uiMat[maxUser][maxItem] is average room for each user or item.
-    userCount = new float[maxUser + 1]; // count is for calculating average
-    movieCount = new float[maxMovie + 1]; // count is for calculating average
+    uiMat = new double*[maxUser + 1]; // uiMat[maxUser][maxItem] is average room for each user or item.
+    userCount = new double[maxUser + 1]; // count is for calculating average
+    movieCount = new double[maxMovie + 1]; // count is for calculating average
 
     for(userIter = userList.begin(); userIter != userList.end(); userIter++)
     {
         i = *userIter;
-        uiMat[i] = new float[maxMovie + 1];
+        uiMat[i] = new double[maxMovie + 1];
         for(movieIter = movieList.begin(); movieIter != movieList.end(); movieIter++)
             uiMat[i][*movieIter] = 0.0;
         userCount[i] = 0.0;
     }
 
-    uiMat[maxUser] = new float[maxMovie]; // for Movie Average
+    uiMat[maxUser] = new double[maxMovie]; // for Movie Average
     for(movieIter = movieList.begin(); movieIter != movieList.end(); movieIter++)
     {
         j = *movieIter;
@@ -143,25 +147,31 @@ int main(int argc, char* argv[])
         movieCount[movieid]++;
     }
     for(userIter = userList.begin(); userIter != userList.end(); userIter++)
-        uiMat[*userIter][maxMovie] /= static_cast<float>(userCount[*userIter]);
+        uiMat[*userIter][maxMovie] /= static_cast<double>(userCount[*userIter]);
     for(movieIter = movieList.begin(); movieIter != movieList.end(); movieIter++)
-        uiMat[maxUser][*movieIter] /= static_cast<float>(movieCount[*movieIter]);
+        uiMat[maxUser][*movieIter] /= static_cast<double>(movieCount[*movieIter]);
 
     // Calculating similarity for each movie. The matrix is symmetry.
     cout << "Start calculating similarity" << endl; // DEBUG
     neighborList = new priority_queue<ItemSimilarity>[maxMovie];
     for(movieIter = movieList.begin(); movieIter != movieList.end(); movieIter++)
     {
-        movieIter2 = movieIter; movieIter2++;
-        for(; movieIter2 != movieList.end(); movieIter2++)
+        for(movieIter2 = movieList.begin(); movieIter2 != movieList.end(); movieIter2++)
         {
             i = *movieIter; j = *movieIter2;
-            float sim = getAdjustSimilarity(i,j);
-            if ( sim <= 0.0 )
+            if (i >= j)
                 continue;
-            simOut<< i << "\t,\t" << j << "\t" << sim << endl;
+
+            double sim = getAdjustSimilarity(i,j);
+
+            if ( sim <= 0.0f )
+                continue;
+
+            simOut<<"["<<i<<", "<< j << "] "<< sim << endl;
+
             neighborList[i].push( ItemSimilarity(j,sim) );
             neighborList[j].push( ItemSimilarity(i,sim) );
+
         }
     }
     simOut.close();
@@ -169,17 +179,22 @@ int main(int argc, char* argv[])
     //DEBUG
     for(movieIter = movieList.begin(); movieIter != movieList.end(); movieIter++)
     {
+        int count = 0;
         i = *movieIter;
         priority_queue<ItemSimilarity> neighborMovieList(neighborList[i]);
         itemOut << "[\t" << i << "]\t" << movieCount[i] << ":\t" << uiMat[maxUser][i] << "[\t" << neighborMovieList.size() << "\t->";
-        while( neighborMovieList.size() > 0 )
+        while( neighborMovieList.size() > 0 )//&& count < K )
         {
-            itemOut << "\t" << neighborMovieList.top().movieid_;
+            itemOut << "\t" << neighborMovieList.top().movieid_ << "(" << neighborMovieList.top().sim_ << ")";
             neighborMovieList.pop();
+            count++;
         }
         itemOut << endl;
     }
     itemOut.close();
+
+
+
     //DEBUG
     
 
@@ -203,9 +218,29 @@ int main(int argc, char* argv[])
 //     // DEBUG
 
 
+    /*************
+
+    // DEBUG - start
+    i = 1;
+    cout << i;
+    j = 24;     cout << "\t" << j << "(" << predictRating(i,j, neighborList) << ")"<< endl;;
+    j = 1111;   cout << "\t" << j << "(" << predictRating(i,j, neighborList) << ")"<< endl;;
+    j = 1127;   cout << "\t" << j << "(" << predictRating(i,j, neighborList) << ")"<< endl;;
+    j = 268;    cout << "\t" << j << "(" << predictRating(i,j, neighborList) << ")"<< endl;;
+    j = 318;    cout << "\t" << j << "(" << predictRating(i,j, neighborList) << ")"<< endl;;
+    j = 501;    cout << "\t" << j << "(" << predictRating(i,j, neighborList) << ")"<< endl;;
+    j = 1511;   cout << "\t" << j << "(" << predictRating(i,j, neighborList) << ")"<< endl;;
+    j = 1191;   cout << "\t" << j << "(" << predictRating(i,j, neighborList) << ")"<< endl;;
+    j = 1347;   cout << "\t" << j << "(" << predictRating(i,j, neighborList) << ")"<< endl;;
+    j = 1357;   cout << "\t" << j << "(" << predictRating(i,j, neighborList) << ")"<< endl;;
+    cout << endl;
+
+    ***********************/
+
+    // DEBUG - end
 
     // Calculating top k neighbors for each item.
-    float pui;
+    double pui;
     size_t topk = 10;
 
     for(userIter = userList.begin(); userIter != userList.end(); userIter++)
@@ -216,9 +251,9 @@ int main(int argc, char* argv[])
         for(movieIter = movieList.begin(); movieIter != movieList.end(); movieIter++)
         {
             j = *movieIter;
-            pui = uiMat[i][j];
-            if ( pui == 0.0 )
-                pui = predictRating( i, j, neighborList );
+            if ( uiMat[i][j] != 0.0 )
+                continue;
+            pui = predictRating( i, j, neighborList );
             recommendedMovieList.push( ItemSimilarity( j, pui ) );
         }
 
@@ -227,14 +262,16 @@ int main(int argc, char* argv[])
         size_t rMovieSize = recommendedMovieList.size();
         for(size_t i = 0; i < rMovieSize && i < topk; i++)
         {
-            fpout << "\t" << recommendedMovieList.top().movieid_ << "(" << recommendedMovieList.top().sim_ << ")";
+            fpout << "\t" << recommendedMovieList.top().movieid_;// << "(" << recommendedMovieList.top().sim_ << ")";
             recommendedMovieList.pop();
         }
         fpout << endl;
     }
+
     fpin.close();
     fpout.close();
 
+    //*/
 
 } // end - int main()
 
@@ -242,11 +279,11 @@ int main(int argc, char* argv[])
 
 
 // ------------------------------------------------------------------ [ Function Implementation ]
-float getAdjustSimilarity(int i, int j)
+double getAdjustSimilarity(int i, int j)
 {
-    float ave;
-    float numerator = 0.0, root1 = 0.0, root2 = 0.0;
-    float rui, ruj;
+    double ave;
+    double numerator = 0.0, root1 = 0.0, root2 = 0.0;
+    double rui, ruj;
     int u;
     set<int>::iterator userIter = userList.begin();
     for(; userIter != userList.end(); userIter++)
@@ -264,26 +301,27 @@ float getAdjustSimilarity(int i, int j)
         root2 += pow(ruj - ave, 2);
     }
 
-    float root = sqrt(root1) * sqrt(root2);
+    double root = sqrt(root1) * sqrt(root2);
     if ( root == 0.0 )
         return 0.0;
 
     return numerator / root;
 }
 
-float predictRating(int user, int movie, priority_queue<ItemSimilarity>* _neighborMovieList)
+double predictRating(int user, int movie, priority_queue<ItemSimilarity>* _neighborMovieList)
 {
     int count = 0;
     int neighborMovie;
-    float numerator = 0.0, root = 0.0, sim;
-    float ramda = 0.7;
-    float rate;
-
+    double numerator = 0.0, root = 0.0, sim;
+    double ramda = 0.7;
+    double rate;
 
     priority_queue<ItemSimilarity>& neighborMovieList(_neighborMovieList[movie]);
 
     if ( neighborMovieList.size() == 0 )
+    {
         rate = ramda * uiMat[user][maxMovie] + (1-ramda)*uiMat[maxUser][movie];
+    }
     else
     {
         while( count < K && neighborMovieList.size() > 0 )
@@ -291,7 +329,8 @@ float predictRating(int user, int movie, priority_queue<ItemSimilarity>* _neighb
             const ItemSimilarity& neighbor( neighborMovieList.top() );
             neighborMovie = neighbor.movieid_;
             sim = neighbor.sim_;
-            numerator += sim * uiMat[user][movie];
+            numerator += sim * uiMat[user][neighborMovie];
+            //cerr << "Neighbor similarity (" << user << "-" << movie << ") : " << count << " = " << neighborMovie << "-" << sim << "#" << uiMat[user][neighborMovie] << endl;
             root += sim;
             count++;
             neighborMovieList.pop();
