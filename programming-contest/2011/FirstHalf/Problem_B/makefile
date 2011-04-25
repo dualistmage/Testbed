@@ -2,8 +2,8 @@ CC = g++
 RM = rm -f
 
 INCLUDE_DIRS = -I.
-CC_FLAGS = -c -Wall -ansi -g
-#CC_FLAGS = -O1
+#CC_FLAGS = -c -Wall -ansi -g
+CC_FLAGS = -O3
 
 EXE_OUT1 = Problem_B
 OBJ1 = $(EXE_OUT1).o
